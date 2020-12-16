@@ -2,8 +2,9 @@
 
 ```
 Yaf write by origin php
-使用原生php重写的一个Yaf版本，完整根据laruence大神的yaf思路，加上自己认识做出来的一个轻量级框架，可用于将现有代码迁移更容易维护的原生PHP，
-兼容php8.0！
+使用原生php重写的一个Yaf版本，
+完整根据laruence大神的yaf思路，加上自己认识做出来的一个轻量级框架，
+可用于将现有代码迁移更容易维护的原生PHP，兼容php8.0！
 目前已完成Application/Resquest/Route_Static/Dispatch 等模块，已实现的功能都正常运行。
 
 通过这些天摸索，我只想说
