@@ -1,0 +1,25 @@
+{
+    "name": "phpseven/yaf",
+    "description": "yaf php version",
+    "type": "library",
+    "license": "mit",
+    "authors": [
+        {
+            "name": "phpseven",
+            "email": "phpseven@foxmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "repositories": {
+            "packagist": {
+                    "type": "composer",
+                    "url": "https://mirrors.aliyun.com/composer/"
+            }
+    },
+    "autoload": {
+        "psr-4": {
+            "Yaf\\" : "src"
+        }
+    }
+}
