@@ -1,11 +1,27 @@
 # yaf
+
+```
 Yaf write by origin php
 使用原生php重写的一个Yaf版本，完整根据laruence大神的yaf思路，加上自己认识做出来的一个轻量级框架，可用于将现有代码迁移更容易维护的原生PHP，
 兼容php8.0！
 目前已完成Application/Resquest/Route_Static/Dispatch 等模块，已实现的功能都正常运行。
 
 通过这些天摸索，我只想说
+
+```
 # laruence大神牛逼！
+
+
+## 安装方法
+
+
+- 1. composer require phpseven/yaf
+- 2. 添加 composer auto 到入库文件 index.php （下个版本会做无composer 的autoload）
+```
+define('APPLICATION_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR); 
+require_once('path/to/vendor/autoload.php');
+
+```
 
 以下是Yaf 原介绍
 
