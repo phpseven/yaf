@@ -6,19 +6,27 @@ namespace Yaf ;
  */
 abstract class Response_Abstract {
 
-	const DEFAULT_BODY = "content";
+	const DEFAULT_BODY = "default";
 	/**
-	 * @var string
+	 * @var array
 	 */
-	protected $_header;
+	protected $_header = [];
 	/**
-	 * @var string
+	 * @var array
 	 */
-	protected $_body;
+	protected $_body = [];
 	/**
 	 * @var bool
 	 */
-	protected $_sendheader;
+	protected $_sendheader = false;
+
+
+	/**
+	 * 
+	 * @var string
+	 */
+	protected $_redirect_url = '';
+
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.construct.php
@@ -55,7 +63,10 @@ abstract class Response_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function setBody($content, $key = self::DEFAULT_BODY){ }
+	public function setBody($content, $key = self::DEFAULT_BODY){ 
+		$this->_body[$key] = $content;
+		return true;
+	}
 
 	/**
 	 * append a content to a exists content block
@@ -70,7 +81,13 @@ abstract class Response_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function appendBody($content, $key = self::DEFAULT_BODY){ }
+	public function appendBody($content, $key = self::DEFAULT_BODY){
+		if(!isset($this->_body[$key])) {
+			$this->_body[$key] = '';
+		}
+		$this->_body[$key] .= $content;
+		return true;
+	}
 
 	/**
 	 * prepend a content to a exists content block
@@ -85,7 +102,13 @@ abstract class Response_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function prependBody($content, $key = self::DEFAULT_BODY){ }
+	public function prependBody($content, $key = self::DEFAULT_BODY){ 
+		if(!isset($this->_body[$key])) {
+			$this->_body = '';
+		}
+		$this->_body[$key] = $content . $this->_body[$key];
+		return true;
+	}
 
 	/**
 	 * Clear existing content
@@ -99,7 +122,10 @@ abstract class Response_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function clearBody($key = self::DEFAULT_BODY){ }
+	public function clearBody($key = self::DEFAULT_BODY){ 
+		$this->_body[$key] = '';
+		return true;
+	}
 
 	/**
 	 * Retrieve an existing content
@@ -113,5 +139,23 @@ abstract class Response_Abstract {
 	 *
 	 * @return mixed
 	 */
-	public function getBody($key = self::DEFAULT_BODY){ }
+	public function getBody($key = self::DEFAULT_BODY){ 
+		return $this->_body[$key];
+	}
+	
+	/**
+	 * @link http://www.php.net/manual/en/yaf-response-abstract.setredirect.php
+	 *
+	 * @param string $url
+	 *
+	 * @return \Yaf\Response_Abstract
+	 */
+	public function setRedirect($url){ 
+		$this->_redirect_url = $url;
+		return $this;
+	}
+
+
+	
+	abstract public function response($key = self::DEFAULT_BODY);
 }

@@ -57,7 +57,9 @@ abstract class Controller_Abstract {
 	 *
 	 * @return string
 	 */
-	protected function render($tpl, array $parameters = null){ }
+	protected function render($tpl, array $parameters = []){ 
+		return $this->_view->render($tpl, $parameters);
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.display.php
@@ -67,7 +69,12 @@ abstract class Controller_Abstract {
 	 *
 	 * @return bool
 	 */
-	protected function display($tpl, array $parameters = null){ }
+	protected function display($tpl, array $parameters = []){
+		$controller_name = $this->_request->getControllerName();
+		$tpl_dir = str_replace("_", DIRECTORY_SEPARATOR, strtolower($controller_name));
+		$tpl = $tpl_dir . DIRECTORY_SEPARATOR.$tpl;
+		return $this->_view->display($tpl, $parameters);
+	}
 
 	/**
 	 * retrieve current request object
@@ -114,7 +121,7 @@ abstract class Controller_Abstract {
 	}
 
 	/**
-	 * @deprecated not_implemented
+	 * @deprecated not_implemented 这个在dispatch中实现
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.initview.php
 	 *
 	 * @param array $options
@@ -122,7 +129,7 @@ abstract class Controller_Abstract {
 	 * @return \Yaf\Response_Abstract
 	 */
 	public function initView(array $options = null){ 
-		//TODO: ?
+		throw new Exception(__METHOD__  .'在dispatch中实现，请调用dispatch的initView');
 	}
 
 	/**
@@ -133,8 +140,8 @@ abstract class Controller_Abstract {
 	 * @return bool
 	 */
 	public function setViewpath($view_directory){
-		//TODO: ?
-
+		$this->_view->setScriptPath($view_directory);
+		return true;
 	 }
 
 	/**
@@ -143,8 +150,7 @@ abstract class Controller_Abstract {
 	 * @return string
 	 */
 	public function getViewpath(){ 
-		//TODO: ?
-
+		return $this->_view->getScriptPath();
 	}
 
 	/**
@@ -167,13 +173,19 @@ abstract class Controller_Abstract {
 	 *
 	 * @return bool return FALSE on failure
 	 */
-	public function forward($module, $controller = null, $action = null, array $parameters = null){ 
-		
-		//TODO: ?
+	public function forward($module, $controller = null, $action = null, array $parameters = null){
+		$this->_request->setModuleName($module);
+		$this->_request->setControllerName($controller);
+		$this->_request->setActionName($action);
+		$this->_request->setParam($parameters);		
+		$this->_request->setDispatched(false);
+		return false;
 	}
 
 	/**
 	 * redirect to a URL by sending a 302 header
+	 * 重定向到一个url，发送302的header
+	 * 
 	 *
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.redirect.php
 	 *
@@ -182,13 +194,12 @@ abstract class Controller_Abstract {
 	 * @return bool
 	 */
 	public function redirect($url){ 
-		
-		//TODO: ?
+		$this->_response->setRedirect($url);
 	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.getinvokeargs.php
-	 *
+	 *	TODO: 这个在c代码没找到相关调用，可用于保存cli的 argv
 	 * @return array
 	 */
 	public function getInvokeArgs(){ 
@@ -197,12 +208,16 @@ abstract class Controller_Abstract {
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.getinvokearg.php
+	 *	TODO: 这个在c代码没找到相关调用，可用于保存cli的 argv
 	 * @param string $name
 	 *
 	 * @return null|mixed
 	 */
 	public function getInvokeArg($name){ 
-
+		if(isset($this->_invoke_args[$name])){
+			return $name;
+		}
+		return null;
 	}
 
 	/**
@@ -225,7 +240,7 @@ abstract class Controller_Abstract {
 	 * @param \Yaf\Request_Abstract $request
 	 * @param \Yaf\Response_Abstract $response
 	 * @param \Yaf\View_Interface $view
-	 * @param array $invokeArgs
+	 * @param array $invokeArgs  TODO: NOT USED dispatch 未传递此数据
 	 */
 	public function __construct(\Yaf\Request_Abstract $request, \Yaf\Response_Abstract $response, \Yaf\View_Interface $view, array $invokeArgs = null){ 
 		$this->_request = $request;

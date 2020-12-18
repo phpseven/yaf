@@ -2,6 +2,8 @@
 namespace Yaf ;
 
 use ReflectionClass;
+use ReflectionException;
+use Yaf\Exception\TypeError;
 use Yaf\View\Simple;
 
 /**
@@ -37,13 +39,17 @@ final class Dispatcher {
 	 */
 	protected $_auto_render = true;
 	/**
-	 * @var string
+	 * @var bool
+	 * true： dispatch 返回 Response对象
+	 * false：dispatch 返回 action执行结果
 	 */
-	protected $_return_response = "";
+	protected $_return_response = false;
 	/**
-	 * @var string
+	 * @var bool
+	 * true： 调用display 方法，直接输出，那么将忽略Yaf_Dispatcher::$_return_response
+	 * false：调用render，将数据写入response 的默认body
 	 */
-	protected $_instantly_flush = "";
+	protected $_instantly_flush = false;
 	/**
 	 * @var string
 	 */
@@ -57,10 +63,36 @@ final class Dispatcher {
 	 */
 	protected $_default_action;
 
+
+	/**
+	 * add by phpseven
+	 * 记录当前dispatch次数（主要为了防止出现互相dispatch引起的死循环）
+	 * @var int
+	 */
+	protected $_dispatcher_times = 0;
+
+	/**
+	 * TODO: 未实现
+	 * 切换在Yaf出错的时候抛出异常, 还是触发错误.
+	 * 当然,也可以在配置文件中使用ap.dispatcher.thorwException=$switch达到同样的效果, 默认的是开启状态.
+	 * @var bool
+	 */
+	protected $_throw_exception = true;
+	/**
+	 * TODO: 未实现
+	 * 在ap.dispatcher.throwException开启的状态下, 是否启用默认捕获异常机制
+	 * 当然,也可以在配置文件中使用ap.dispatcher.catchException=$switch达到同样的效果, 默认的是开启状态.
+	 * 如果为TRUE, 则在有未捕获异常的时候, Yaf会交给Error Controller的Error Action处理.
+	 * @var true
+	 */
+	protected $_catch_exception = true;
+
 	/**
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.construct.php
 	 */
-	private function __construct(){ }
+	private function __construct(){ 
+
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.clone.php
@@ -84,7 +116,9 @@ final class Dispatcher {
 	 *
 	 * @return \Yaf\Dispatcher
 	 */
-	public function enableView(){ }
+	public function enableView(){ 
+		$this->_auto_render = true;
+	}
 
 	/**
 	 * <p>disable view engine, used in some app that user will output by himself</p><br/>
@@ -95,7 +129,9 @@ final class Dispatcher {
 	 *
 	 * @return bool
 	 */
-	public function disableView(){ }
+	public function disableView(){ 
+		$this->_auto_render = false;
+	}
 
 	/**
 	 * Initialize view and return it
@@ -106,7 +142,10 @@ final class Dispatcher {
 	 * @param array $options
 	 * @return \Yaf\View_Interface
 	 */
-	public function initView($templates_dir, array $options = null){ }
+	public function initView($templates_dir, array $options = []){ 
+		$this->_view =  new Simple($templates_dir, $options);
+		return $this->_view;
+	}
 
 	/**
 	 * This method provides a solution for that if you want use a custom view engine instead of \Yaf\View\Simple
@@ -116,7 +155,9 @@ final class Dispatcher {
 	 * @param \Yaf\View_Interface $view A \Yaf\View_Interface instance
 	 * @return \Yaf\Dispatcher
 	 */
-	public function setView(\Yaf\View_Interface $view){ }
+	public function setView(\Yaf\View_Interface $view){ 
+		$this->_view = $view;
+	}
 
 	/**
 	 *
@@ -184,15 +225,42 @@ final class Dispatcher {
 	/**
 	 * <p>Set error handler for Yaf. when application.dispatcher.throwException is off, Yaf will trigger catch-able error while unexpected errors occurred.</p><br/>
 	 * <p>Thus, this error handler will be called while the error raise.</p>
-	 *
+	 *	设置错误处理函数, 一般在appcation.throwException关闭的情况下, Yaf会在出错的时候触发错误, 这个时候, 如果设置了错误处理函数, 则会把控制交给错误处理函数处理.
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.seterrorhandler.php
 	 *
-	 * @param callable $callback a callable callback
+	 * @param callable $callback 错误处理函数, 这个函数需要最少接受俩个参数: 
+	 * 		错误代码($error_code)和错误信息($error_message), 
+	 * 		可选的还可以接受三个参数: 错误文件($err_file), 错误行($err_line)和错误上下文($errcontext)
 	 * @param int $error_types YAF_ERR_* constants mask
-	 *
+	 * 一般可放在Bootstrap中定义错误处理函数
+	 * function myErrorHandler($errno, $errstr, $errfile, $errline)
+	   {
+			switch ($errno) {
+			case YAF_ERR_NOTFOUND_CONTROLLER:
+			case YAF_ERR_NOTFOUND_MODULE:
+			case YAF_ERR_NOTFOUND_ACTION:
+				header("Not Found");
+			break;
+
+			default:
+				echo "Unknown error type: [$errno] $errstr<br />\n";
+				break;
+			}
+
+			return true;
+		}
+
+		Yaf_Dispatcher::getInstance()->setErrorHandler("myErrorHandler");
 	 * @return \Yaf\Dispatcher
 	 */
-	public function setErrorHandler(callable $callback, $error_types){ }
+	public function setErrorHandler(callable $callback, $error_types){ 
+		if(is_callable($callback)) {
+			set_error_handler($callback, $error_types );
+			return $this;
+		}
+		throw new TypeError("callback is not callable");
+		// $this->_error_handler = $callback;
+	}
 
 	/**
 	 * Change default module name
@@ -236,7 +304,9 @@ final class Dispatcher {
 	 * @param bool $flag
 	 * @return \Yaf\Dispatcher
 	 */
-	public function returnResponse($flag){ }
+	public function returnResponse($flag){ 
+		$this->_return_response = $flag;
+	}
 
 	/**
 	 * <p>\Yaf\Dispatcher will render automatically after dispatches an incoming request, you can prevent the rendering by calling this method with $flag TRUE</p><br/>
@@ -260,7 +330,18 @@ final class Dispatcher {
 	 * @param bool $flag since 2.2.0, if this parameter is not given, then the current state will be set
 	 * @return \Yaf\Dispatcher
 	 */
-	public function flushInstantly($flag = null){ }
+	public function flushInstantly($flag){ 
+		$this->_instantly_flush = $flag;
+		return $this;
+	}
+
+	/**
+	 * is instant flushing
+	 * @return bool
+	 */
+	public function isFlushInstantly(){ 
+		return $this->_instantly_flush;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.getinstance.php
@@ -283,7 +364,16 @@ final class Dispatcher {
 	 * <li>Dispatching</li>
 	 * <li>Response</li>
 	 * </ul>
-	 * <p>Routing takes place exactly once, using the values in the request object when dispatch() is called. Dispatching takes place in a loop; a request may either indicate multiple actions to dispatch, or the controller or a plugin may reset the request object to force additional actions to dispatch(see \Yaf\Plugin_Abstract. When all is done, the \Yaf\Dispatcher returns a response.</p>
+	 * <p>
+	 * 
+	 * Routing takes place exactly once, using the values in the request object when dispatch() is called. 
+	 * Dispatching takes place in a loop; a request may either indicate multiple actions to dispatch, 
+	 * or the controller or a plugin may reset the request object to force additional actions to dispatch(see \Yaf\Plugin_Abstract. 
+	 * When all is done, the \Yaf\Dispatcher returns a response.
+	 * route 只执行一次，
+	 * 一次请求中，当控制调用了doDispatch或者调用了 forward， doDispatch会执行多次
+	 * 全部执行完之后会返回$response
+	 * </p>
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.dispatch.php
 	 *
@@ -298,41 +388,59 @@ final class Dispatcher {
 	 *
 	 * @return \Yaf\Response_Abstract
 	 */
-	public function dispatch(\Yaf\Request_Abstract $request){ 
-		/// 初始化response
-		$request_class = get_class($request);
-		if( $request_class === 'Yaf\Request\Http') {
-			$response = new Response\Http();
-		}else {
-			$response = new Response\Cli();
-		}
+	public function dispatch(\Yaf\Request_Abstract &$request, \Yaf\Response_Abstract &$response = null){ 
 
-		/// 路由
+		$forward_limit = Application::app()->getConfig('yaf.forward_limit');
+
+		if($response === null) {
+			//根据是否CLI，产生对应的response
+			$response = $request->isCli()? new Response\Cli() :new Response\Http();
+		}
 		foreach($this->_plugins as $plugin) {
 			$plugin->routerStartup($request, $response);
 		}
 
 		$this->_router = new Router();
 		$this->_router->route($request );
-		
+		$request->setRouted(true);
 		foreach($this->_plugins as $plugin) {
 			$plugin->routerShutdown($request, $response);
 		}
-
-
 
 		
 		foreach($this->_plugins as $plugin) {
 			$plugin->dispatchLoopStartup($request, $response);
 		}
+
+		while(!$request->isDispatched() && $this->_dispatcher_times<$forward_limit ) {
+			$request->setDispatched(true);
+			$this->doDispatch($request, $response);
+		}
 		
+		
+		foreach($this->_plugins as $plugin) {
+			$plugin->dispatchLoopShutdown($request, $response);
+		}
+
+		return $response;
+	}
+
+	/**
+	 * 
+	 * @param Request_Abstract $request 
+	 * @param Response_Abstract $response 
+	 * @return mixed 
+	 * $this->_return_response === true  && $this->_instantly_flush !==true 返回response对象
+	 * 否则，返回action return的数据
+	 * @throws ReflectionException 
+	 */
+	public function doDispatch(\Yaf\Request_Abstract &$request, \Yaf\Response_Abstract &$response){ 
+		$this->_dispatcher_times ++;
+
 		foreach($this->_plugins as $plugin) {
 			$plugin->preDispatch($request, $response);
 		}
 
-		/**
-		 * dispatch
-		 */
 		$module = $request->getModuleName();
 		$controller = $request->getControllerName();
 		$action = $request->getActionName();
@@ -341,57 +449,83 @@ final class Dispatcher {
 		$directory_path =	Application::app()->getAppDirectory();
 		$default_module = $this->getDefaultModule();
 		if($module === $default_module) {
-			$view_dir = $directory_path.'views';
+			$view_dir = $directory_path.DIRECTORY_SEPARATOR.'views';
 		}else {				
 			$view_dir = $directory_path. DIRECTORY_SEPARATOR.'modules'. DIRECTORY_SEPARATOR.ucfirst($module). DIRECTORY_SEPARATOR.'views';
 		}
-		$view = new Simple($view_dir);
+		if(empty($this->_view)) {
+			$view = $this->initView($view_dir);
+		}
 
 		
 		$controller_class_name = ucfirst("{$controller}Controller");
 		$reflection = new ReflectionClass($controller_class_name);
 		$controller_class_object = $reflection->newInstance($request, $response, $view);
-		$init_method = $reflection->getMethod( 'init');
+		$init_method = $reflection->getMethod('init');
+		$init_methd_result = null;
 		if($init_method) {
-			$init_method->invoke($controller_class_object);
+			$init_methd_result = $init_method->invoke($controller_class_object);
 		}
-		$action_method = $reflection->getMethod($action . 'Action');
-		
-		$ob_content = ob_get_contents();
-		ob_end_clean();
-		if(!empty($ob_content)) {
-			\Core::log('start ob:'. $ob_content);
+		/**
+		 * https://github.com/laruence/yaf/issues/121
+		 * 对 issues 121 如果init返回 false，不会执行后面的Action的内容，不过会执行hooks
+		 */
+		if($init_methd_result === false) {
+			$action_result = $init_methd_result;
+		}else  {
+			$action_method = $reflection->getMethod($action . 'Action');		
+			$ob_content = ob_get_contents();
+			ob_end_clean();
+			ob_start();
+			if(!empty($ob_content)) {
+				// Application::app()->appendErrorMsg('start ob:'. $ob_content);
+			}
+			$error_msg = Application::app()->getLastErrorMsg();
+			if(!empty($error_msg)) {
+				Application::app()->appendErrorMsg('Application error_msg:'. $ob_content);
+			}
+			$action_params = $action_method->getParameters();
+			$action_args = [];
+			if(!empty($action_params)) foreach($action_params as $action_param_key =>  $action_param) {
+				$action_param_name = $action_param->getName();
+				$action_args[$action_param_key] = isset($params[$action_param_name])?$params[$action_param_name]:null;
+			}
+			/**
+			 * Action 通过return 返回的数据
+			 */
+			$action_result = $action_method->invokeArgs($controller_class_object, $action_args);
+			// var_export($action_result);
+			// var_export($this->_auto_render);
+			if($this->_auto_render  && $action_result !== false) {
+				$view_reflection = new ReflectionClass($view);
+				$view_method = $this->_instantly_flush=== true? 'display':'render';
+				$display_method = $view_reflection->getMethod($view_method);
+				$tpl_path =  str_replace('_', DIRECTORY_SEPARATOR, $controller).DIRECTORY_SEPARATOR.$action;
+				$action_render_result = $display_method->invoke($view, $tpl_path, []);
+				
+				if($this->_instantly_flush !==true) {
+					$response->setBody($action_render_result);
+				}
+				
+				Application::app()->appendErrorMsg('auto_render:'. $tpl_path);
+			}else {
+				//TODO: 在action return false，这里会直_instantly_flush = true，不走response, 会影响到某些场景未考虑到的场景
+				$this->_instantly_flush = true;
+				Application::app()->appendErrorMsg('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
+				ob_end_flush();
+			}
+
 		}
-		$error_msg = Application::app()->getLastErrorMsg();
-		if(!empty($error_msg)) {
-			\Core::log('Application error_msg:'. $ob_content);
-		}
-		$action_result = $action_method->invoke($controller_class_object);
-		if($this->_auto_render  && $action_result !== false) {
-			$view_reflection = new ReflectionClass($view);
-			$display_method = $view_reflection->getMethod('display');
-			$tpl_path =  str_replace('_', DIRECTORY_SEPARATOR, $controller).DIRECTORY_SEPARATOR.$action . '.tpl';
-			$display_method->invoke($view, $tpl_path);
-			\Core::log('auto_render:'. $tpl_path);
-		}else {
-			\Core::log('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
-			ob_end_flush();
-		}
-		
 		
 		foreach($this->_plugins as $plugin) {
 			$plugin->postDispatch($request, $response);
 		}
-		
-		foreach($this->_plugins as $plugin) {
-			$plugin->dispatchLoopShutdown($request, $response);
-		}
 
-		if($this->_return_response === true) {
+		if($this->_return_response === true  && $this->_instantly_flush !==true) {
 			return $response;
 		}
 
-		$response->response();
+		return $action_result;
 	}
 
 	/**
@@ -403,7 +537,9 @@ final class Dispatcher {
 	 * @param bool $flag
 	 * @return \Yaf\Dispatcher
 	 */
-	public function throwException($flag = null){ }
+	public function throwException($flag){ 
+		$this->_throw_exception = $flag;
+	}
 
 	/**
 	 * <p>While the application.dispatcher.throwException is On(you can also calling to <b>\Yaf\Dispatcher::throwException(TRUE)</b> to enable it), Yaf will throw \Exception whe error occurs instead of trigger error.</p><br/>
@@ -414,7 +550,9 @@ final class Dispatcher {
 	 * @param bool $flag
 	 * @return \Yaf\Dispatcher
 	 */
-	public function catchException($flag = null){ }
+	public function catchException($flag){ 
+		$this->_catch_exception = $flag;
+	}
 
 	/**
 	 * Register a plugin(see \Yaf\Plugin_Abstract). Generally, we register plugins in Bootstrap(see \Yaf\Bootstrap_Abstract).

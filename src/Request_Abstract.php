@@ -27,7 +27,7 @@ abstract class Request_Abstract {
 	/**
 	 * @var array
 	 */
-	protected $params;
+	protected $params = [];
 	/**
 	 * @var string
 	 */
@@ -45,13 +45,13 @@ abstract class Request_Abstract {
 	 */
 	protected $uri = "";
 	/**
-	 * @var string
+	 * @var bool
 	 */
-	protected $dispatched = "";
+	protected $dispatched = false;
 	/**
-	 * @var string
+	 * @var bool
 	 */
-	protected $routed = "";
+	protected $routed = false;
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-request-abstract.isget.php
@@ -103,21 +103,27 @@ abstract class Request_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function isCli(){ }
+	public function isCli(){ 
+        return PHP_SAPI === 'cli';
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-request-abstract.isdispached.php
 	 *
 	 * @return bool
 	 */
-	public function isDispatched(){ }
+	public function isDispatched(){ 
+		return $this->dispatched;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-request-abstract.isrouted.php
 	 *
 	 * @return bool
 	 */
-	public function isRouted(){ }
+	public function isRouted(){ 
+		return $this->routed;
+	}
 
 	/**
 	 *
@@ -230,7 +236,7 @@ abstract class Request_Abstract {
 	 */
 	public function setParam($name, $value = null){ 
 		if(is_array($name) && !empty($name)) {
-			$this->params = array_merge($this->params, $name);
+			$this->params = array_replace_recursive($this->params, $name);
 		} 
 		if(!empty($name) && $value !==null) {
 			$this->params[$name] = $value;
@@ -376,14 +382,20 @@ abstract class Request_Abstract {
 	 *
 	 * @return bool
 	 */
-	public function setDispatched(){ }
+	public function setDispatched(bool $flag){ 
+		$this->dispatched = $flag;
+		return $this;
+	}
 
 	/**
 	 * Set request as routed
 	 *
 	 * @link http://www.php.net/manual/en/yaf-request-abstract.setrouted.php
 	 *
-	 * @return \Yaf\Request_Abstract|bool
+	 * @return \Yaf\Request_Abstract
 	 */
-	public function setRouted(){ }
+	public function setRouted(bool $flag){ 
+		$this->routed = $flag;
+		return $this;
+	}
 }

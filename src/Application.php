@@ -2,9 +2,7 @@
 namespace Yaf;
 
 use Bootstrap;
-use Reflection;
 use ReflectionMethod;
-use yaf\Core;
 use Yaf\Exception\LoadFailed;
 use Yaf\Exception\StartupError;
 
@@ -67,7 +65,7 @@ final class Application {
 	 */
 	private $__loader = null;
 
-	private $__version = 'phpyaf 0.1';
+	private $__version = '0.2';
 
 	private $__app_directory = '';
 
@@ -96,12 +94,12 @@ final class Application {
 	public function run(){
 		$base_uri = $this->config->get('application.baseUri');
 		$request = new Request\Http(null,$base_uri);
-		try {
-			$this->dispatcher->dispatch($request);
-		}catch(\Exception $e){
-			\Core::handleException($e);
+
+		$response = new Response\Http();
+		$this->getDispatcher()->dispatch($request, $response);		
+		if(!$this->getDispatcher()->isFlushInstantly()) {
+			$response->response();
 		}
-		
 	}
 
 	/**
@@ -109,6 +107,7 @@ final class Application {
 	 * Make the crontab work can also use the autoloader and Bootstrap mechanism.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-application.execute.php
+	 * TODO: CLI 的场景
 	 *
 	 * @param callable $entry a valid callback
 	 * @param string $_ parameters will pass to the callback
@@ -146,7 +145,7 @@ final class Application {
 	 * @return \Yaf\Application
 	 */
 	public function bootstrap(\Yaf\Bootstrap_Abstract $bootstrap = null){
-		/// 2. Dispatcher Init
+		/// 1. Dispatcher Init
 		$this->dispatcher = $this->getDispatcher();
 		$default_module = $this->config->get('application.dispatcher.defaultModule');
 		if(empty($default_module)) {
@@ -160,7 +159,7 @@ final class Application {
 		$this->dispatcher->setDefaultController($default_controller);
 		$default_action = $this->config->get('application.dispatcher.defaultAction');
 		if(empty($default_action)) {
-			$default_action = 'Index';
+			$default_action = 'index';
 		}
 		$this->dispatcher->setDefaultAction($default_action);
 		$modules_str = $this->config->get('application.modules');
@@ -169,13 +168,12 @@ final class Application {
 		}else {
 			$this->_modules = [$default_module];
 		}
-		array_walk($this->_modules, 'trim');
-		array_walk($this->_modules, function ($var)
+		array_walk($this->_modules, function (&$var)
 		{
 			$var = strtolower(trim($var));
 		});
 
-		///	1. Loader
+		///	2. Loader
 		$directory_path =	$this->config->get('application.directory');
 		$this->setAppDirectory($directory_path);
 		$library_path = $this->config->get('application.library');

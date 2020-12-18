@@ -9,7 +9,8 @@ class Http extends \Yaf\Response_Abstract {
 	/**
 	 * @var int
 	 */
-	protected $_response_code = 0;
+	protected $_response_code = 200;
+
 
 	/**
 	 *
@@ -31,18 +32,29 @@ class Http extends \Yaf\Response_Abstract {
 	 * @param bool $replace
 	 * @param int $response_code
 	 *
-	 * @return bool
+	 * @return \Yaf\Response\Http
 	 */
-	public function setHeader($name,$value,$replace = false,$response_code = 0){ }
+	public function setHeader($name,$value,$replace = false,$response_code = 0){ 
+		if($response_code !==0) {
+			$this->_response_code = $response_code;
+		}
+		if(!isset($this->header[$name]) && $replace !== false) {
+			$this->header[$name] .= $value;
+		}
+		$this->header[$name] = $value;
+		return true;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.setallheaders.php
 	 *
 	 * @param array $headers
 	 *
-	 * @return bool
+	 * @return \Yaf\Response\Http
 	 */
-	protected function setAllHeaders(array $headers){ }
+	protected function setAllHeaders(array $headers){ 
+		$this->header = $headers;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.getheader.php
@@ -51,34 +63,55 @@ class Http extends \Yaf\Response_Abstract {
 	 *
 	 * @return mixed
 	 */
-	public function getHeader($name = null){ }
+	public function getHeader($name = null){ 
+		if($name === null){
+			return $this->header;
+		}
+		return isset($this->header[$name])?$this->header[$name]:null;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.clearheaders.php
 	 *
 	 * @param string $name
 	 *
-	 * @return \Yaf\Response_Abstract|false
+	 * @return \Yaf\Response\Http
 	 */
-	public function clearHeaders($name = null){ }
+	public function clearHeaders($name = null){ 
+		if($name ===null) {
+			$this->header = [];
+		}
+		if(isset($this->header[$name])) {
+			unset($this->header[$name]);
+		}
+		return $this;
 
-	/**
-	 * @link http://www.php.net/manual/en/yaf-response-abstract.setredirect.php
-	 *
-	 * @param string $url
-	 *
-	 * @return bool
-	 */
-	public function setRedirect($url){ }
+	}
+
 
 	/**
 	 * send response
 	 *
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.response.php
 	 *
-	 * @return bool
+	 * @return \Yaf\Response\Http
 	 */
-	public function response(){ 
-		
+	public function response($key = self::DEFAULT_BODY){
+		//TODO: OB
+		$response_ob = ob_get_contents();
+		ob_end_clean();
+
+		if(!empty($this->_redirect_url)) {			
+			header('HTTP/1.1 301 Moved Permanently');
+			header('Location: '.$this->_redirect_url );
+			return $this;
+		}
+		if($this->_sendheader){
+			header($this->header, true, $this->_response_code);
+		}
+		if(isset($this->_body[$key])) {
+			echo $this->_body[$key];
+		}
+		return $this;
 	}
 }

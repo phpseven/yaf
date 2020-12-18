@@ -39,52 +39,51 @@ class Route_Static implements \Yaf\Route_Interface {
 		$application = Application::app();
 		$uri = str_replace('//', '/', $uri);
 		$uri = trim($uri, '/');
-		$uri_explode = explode('/', $uri);		//TODO: FILLTER
-		array_walk($uri_explode,function (&$var)
-		{
-			$var =  strtolower(trim($var));
-		});
-		$explode_count = count($uri_explode);
+		
 		$dispatcher = $application->getDispatcher();
-		$action_prefer = $application->getConfig()->get('yaf.action_prefer');
-		$module_limit = $application->getModules();
-		array_walk($module_limit,function (&$var)
-		{
-			$var =  strtolower(trim($var));
-		});
 		$module  = $dispatcher->getDefaultModule(); 	
 		$controller = $dispatcher->getDefaultController();
 		$action = $dispatcher->getDefaultAction();
-		$param_start =	false;
 		$params = [];
-		if ($explode_count === 1 ) {			//1个参数: 赋值给controller
-			$controller = $uri_explode[0];
-		} else  {									//2个参数:
-			if(in_array($uri_explode[0], $module_limit)) {	//如果参数0是module，则，参数1为controller，参数2为action
-				$module = $uri_explode[0];
-				$controller = $uri_explode[1];
-				isset($uri_explode[2]) && $action = $uri_explode[2];
-				$param_start = 3;
-			}else {											//否则，参数1为控制器，参数2为action
+		if(!empty($uri)) {
+			$uri_explode = explode('/', $uri);		//TODO: FILLTER
+			array_walk($uri_explode,function (&$var)
+			{
+				$var =  strtolower(trim($var));
+			});
+			$explode_count = count($uri_explode);
+			$action_prefer = $application->getConfig()->get('yaf.action_prefer');
+			$module_limit = $application->getModules();
+			array_walk($module_limit,function (&$var)
+			{
+				$var =  strtolower(trim($var));
+			});
+			$param_start =	false;
+			if ($explode_count === 1 ) {			//1个参数: 赋值给controller
 				$controller = $uri_explode[0];
-				$action = $uri_explode[1];
-				$param_start = 2;
-			}
-		}
-		// var_dump($module_limit);
-		// var_dump($param_start);
-		// var_dump($uri_explode);
-		// var_dump(in_array($uri_explode[0], $module_limit));
-		if($param_start !== false && isset($uri_explode[$param_start])) {
-			$param_index = 0;
-			$param_key = '';
-			for($i=$param_start; $i<$explode_count; $i++){
-				if($param_index%2==0) {
-					$param_key = $uri_explode[$i];
-				}else {
-					$params[$param_key] = $uri_explode[$i];
+			} else  {									//2个参数:
+				if(in_array($uri_explode[0], $module_limit)) {	//如果参数0是module，则，参数1为controller，参数2为action
+					$module = $uri_explode[0];
+					$controller = $uri_explode[1];
+					isset($uri_explode[2]) && $action = $uri_explode[2];
+					$param_start = 3;
+				}else {											//否则，参数1为控制器，参数2为action
+					$controller = $uri_explode[0];
+					$action = $uri_explode[1];
+					$param_start = 2;
 				}
-				$param_key ++;
+			}
+			if($param_start !== false && isset($uri_explode[$param_start])) {
+				$param_index = 0;
+				$param_key = 0;
+				for($i=$param_start; $i<$explode_count; $i++){
+					if($param_index%2==0) {
+						$param_key = $uri_explode[$i];
+					}else {
+						$params[$param_key] = $uri_explode[$i];
+					}
+					$param_index ++;
+				}
 			}
 		}
 

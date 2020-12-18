@@ -28,7 +28,7 @@ interface View_Interface {
 	 * @param array $tpl_vars
 	 * @return bool
 	 */
-	function display($tpl, array $tpl_vars = null);
+	function display($tpl, array $tpl_vars = []);
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-view-interface.getscriptpath.php

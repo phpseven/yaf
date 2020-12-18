@@ -97,7 +97,7 @@ class Ini extends \Yaf\Config_Abstract implements \Iterator, \Traversable, \Arra
 			for($i = $_key_count-2; $i>=0; $i--) {
 				$v = [$_key_arr[$i] => $v];
 			}
-			$this->_data = array_merge_recursive($this->_data, $v);
+			$this->_data = array_replace_recursive($this->_data, $v);
 		}
 	}
 

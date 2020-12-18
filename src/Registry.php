@@ -2,6 +2,7 @@
 namespace Yaf ;
 
 /**
+ * TODO: 未实现，需要借助 yac/redis等系统
  * <p>All methods of <b>\Yaf\Registry</b> declared as static, making it universally accessible. This provides the ability to get or set any custom data from anyway in your code as necessary.</p>
  * @link http://www.php.net/manual/en/class.yaf-registry.php
  */

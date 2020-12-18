@@ -1,6 +1,7 @@
 <?php
 namespace Yaf\View ;
 
+use Yaf\Application;
 use Yaf\Exception\LoadFailed\View;
 
 /**
@@ -25,7 +26,7 @@ class Simple implements \Yaf\View_Interface {
 	/**
 	 * @var array
 	 */
-	protected $_tpl_vars;
+	protected $_tpl_vars = [];
 	/**
 	 * @var array
 	 */
@@ -65,7 +66,7 @@ class Simple implements \Yaf\View_Interface {
 	 */
 	public function assign($name, $value = null){ 
 		if($value === null  && is_array($name)) {
-			$this->_tpl_vars = array_merge_recursive($this->_tpl_vars, $name);
+			$this->_tpl_vars = array_replace_recursive($this->_tpl_vars, $name);
 		}else {
 			$this->_tpl_vars[$name] = $value;
 		}
@@ -82,7 +83,19 @@ class Simple implements \Yaf\View_Interface {
 	 * @return string|void
 	 */
 	public function render($tpl, array $tpl_vars = null){ 
+		$tpl_ob = ob_get_contents();
+		Application::app()->appendErrorMsg($tpl_ob);
+		// var_dump($tpl_ob);
+		unset($tpl_ob);
+		ob_end_flush();
 
+		ob_start();
+		$this->display($tpl, $tpl_vars);
+		$tpl_ob = ob_get_contents();
+		ob_end_clean();
+
+		ob_start();
+		return $tpl_ob;
 	}
 
 	/**
@@ -97,10 +110,13 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return bool
 	 */
-	public function display($tpl, array $tpl_vars = null){ 
-		$tpl_path = $this->_tpl_dir . DIRECTORY_SEPARATOR . $tpl;
+	public function display($tpl, array $tpl_vars = []){
+		$view_ext = Application::app()->getConfig('application.view.ext');
+		$view_ext = !empty($view_ext)?".$view_ext":".phtml";
+		$tpl = str_replace($view_ext, '', $tpl);
+		$tpl_path = $this->_tpl_dir . DIRECTORY_SEPARATOR . $tpl . $view_ext;
 		if(!empty($tpl_vars)){
-			$this->_tpl_vars = array_merge($this->_tpl_vars, $tpl_vars);
+			$this->_tpl_vars = array_replace_recursive($this->_tpl_vars, $tpl_vars);
 		}
 		extract($this->_tpl_vars);
 		if(file_exists($tpl_path)){
@@ -108,7 +124,6 @@ class Simple implements \Yaf\View_Interface {
 		}else {
 			throw new View("$tpl_path is not exist");
 		}
-
 	}
 
 	/**
@@ -120,7 +135,9 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return \Yaf\View\Simple
 	 */
-	public function assignRef($name, &$value){ }
+	public function assignRef($name, &$value){ 
+		return $this->assign($name, $value);
+	}
 
 	/**
 	 * clear assigned variable
@@ -130,7 +147,15 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return \Yaf\View\Simple
 	 */
-	public function clear($name = null){ }
+	public function clear($name = null){ 
+		if($name ===null){			
+			$this->_tpl_vars = [];
+		}
+		if(isset($this->_tpl_vars[$name])){
+			unset($this->_tpl_vars[$name]);
+		}
+		return $this;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-view-simple.setscriptpath.php
@@ -139,14 +164,19 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return \Yaf\View\Simple
 	 */
-	public function setScriptPath($template_dir){ }
+	public function setScriptPath($template_dir){ 
+		$this->_tpl_dir = $template_dir;
+		return $this;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-view-simple.getscriptpath.php
 	 *
 	 * @return string
 	 */
-	public function getScriptPath(){ }
+	public function getScriptPath(){ 
+		return $this->_tpl_dir;
+	}
 
 	/**
 	 * <p>Retrieve assigned variable</p>
@@ -161,7 +191,15 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return mixed
 	 */
-	public function __get($name = null){ }
+	public function __get($name = null){ 
+		if($name ===null) {
+			return $this->_tpl_vars;
+		}
+		if(isset($this->_tpl_vars[$name])){
+			return $this->_tpl_vars[$name];
+		}
+		return '';
+	}
 
 	/**
 	 * <p>This is a alternative and easier way to \Yaf\View\Simple::assign().</p>
@@ -171,5 +209,7 @@ class Simple implements \Yaf\View_Interface {
 	 * @param string $name A string value name.
 	 * @param mixed $value mixed value
 	 */
-	public function __set($name, $value = null){ }
+	public function __set($name, $value = null){ 
+		$this->assign($name,$value);
+	}
 }
