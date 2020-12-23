@@ -22,7 +22,7 @@ class Simple implements \Yaf\View_Interface {
 	/**
 	 * @var string
 	 */
-	protected $_tpl_dir;
+	protected $_tpl_dir = '';
 	/**
 	 * @var array
 	 */
@@ -30,7 +30,7 @@ class Simple implements \Yaf\View_Interface {
 	/**
 	 * @var array
 	 */
-	protected $_options;
+	protected $_options = [];
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-view-simple.construct.php
@@ -43,7 +43,7 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @throws \Yaf\Exception\TypeError
 	 */
-	final public function __construct($template_dir, array $options = null){ 
+	final public function __construct($template_dir, array $options = []){ 
 		$this->_tpl_dir = $template_dir;
 		$this->_options = $options;
 	}
@@ -82,9 +82,9 @@ class Simple implements \Yaf\View_Interface {
 	 *
 	 * @return string|void
 	 */
-	public function render($tpl, array $tpl_vars = null){ 
+	public function render($tpl, array $tpl_vars = []){ 
 		$tpl_ob = ob_get_contents();
-		Application::app()->appendErrorMsg($tpl_ob);
+		\Yaf\ExceptionHandler::instance()->appendDebugMsg($tpl_ob);
 		// var_dump($tpl_ob);
 		unset($tpl_ob);
 		ob_end_flush();
@@ -113,7 +113,7 @@ class Simple implements \Yaf\View_Interface {
 	public function display($tpl, array $tpl_vars = []){
 		$view_ext = Application::app()->getConfig('application.view.ext');
 		$view_ext = !empty($view_ext)?".$view_ext":".phtml";
-		$tpl = str_replace($view_ext, '', $tpl);
+		$tpl = strtolower(str_replace($view_ext, '', $tpl));
 		$tpl_path = $this->_tpl_dir . DIRECTORY_SEPARATOR . $tpl . $view_ext;
 		if(!empty($tpl_vars)){
 			$this->_tpl_vars = array_replace_recursive($this->_tpl_vars, $tpl_vars);
@@ -122,7 +122,11 @@ class Simple implements \Yaf\View_Interface {
 		if(file_exists($tpl_path)){
 			require($tpl_path);
 		}else {
-			throw new View("$tpl_path is not exist");
+			if(file_exists($tpl_path)){
+				require($tpl_path);
+			}else {
+				throw new View("$tpl_path is not exist");
+			}
 		}
 	}
 

@@ -104,6 +104,10 @@ abstract class Request_Abstract {
 	 * @return bool
 	 */
 	public function isCli(){ 
+		return self::staticIsCli();
+	}
+
+	public static function staticIsCli(){
         return PHP_SAPI === 'cli';
 	}
 

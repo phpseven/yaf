@@ -3,6 +3,9 @@ namespace Yaf ;
 
 use ReflectionClass;
 use ReflectionException;
+use Yaf\Exception\LoadFailed\Action;
+use Yaf\Exception\LoadFailed\Controller;
+use Yaf\Exception\LoadFailed\View;
 use Yaf\Exception\TypeError;
 use Yaf\View\Simple;
 
@@ -71,21 +74,6 @@ final class Dispatcher {
 	 */
 	protected $_dispatcher_times = 0;
 
-	/**
-	 * TODO: 未实现
-	 * 切换在Yaf出错的时候抛出异常, 还是触发错误.
-	 * 当然,也可以在配置文件中使用ap.dispatcher.thorwException=$switch达到同样的效果, 默认的是开启状态.
-	 * @var bool
-	 */
-	protected $_throw_exception = true;
-	/**
-	 * TODO: 未实现
-	 * 在ap.dispatcher.throwException开启的状态下, 是否启用默认捕获异常机制
-	 * 当然,也可以在配置文件中使用ap.dispatcher.catchException=$switch达到同样的效果, 默认的是开启状态.
-	 * 如果为TRUE, 则在有未捕获异常的时候, Yaf会交给Error Controller的Error Action处理.
-	 * @var true
-	 */
-	protected $_catch_exception = true;
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.construct.php
@@ -255,11 +243,10 @@ final class Dispatcher {
 	 */
 	public function setErrorHandler(callable $callback, $error_types){ 
 		if(is_callable($callback)) {
-			set_error_handler($callback, $error_types );
+			$this->_error_handler = $callback;
 			return $this;
 		}
 		throw new TypeError("callback is not callable");
-		// $this->_error_handler = $callback;
 	}
 
 	/**
@@ -391,7 +378,9 @@ final class Dispatcher {
 	public function dispatch(\Yaf\Request_Abstract &$request, \Yaf\Response_Abstract &$response = null){ 
 
 		$forward_limit = Application::app()->getConfig('yaf.forward_limit');
-
+		if($forward_limit <=0) {
+			$forward_limit = 5;
+		}
 		if($response === null) {
 			//根据是否CLI，产生对应的response
 			$response = $request->isCli()? new Response\Cli() :new Response\Http();
@@ -441,30 +430,33 @@ final class Dispatcher {
 			$plugin->preDispatch($request, $response);
 		}
 
-		$module = $request->getModuleName();
 		$controller = $request->getControllerName();
 		$action = $request->getActionName();
 		$params = $request->getParams();
-		
-		$directory_path =	Application::app()->getAppDirectory();
-		$default_module = $this->getDefaultModule();
-		if($module === $default_module) {
-			$view_dir = $directory_path.DIRECTORY_SEPARATOR.'views';
-		}else {				
-			$view_dir = $directory_path. DIRECTORY_SEPARATOR.'modules'. DIRECTORY_SEPARATOR.ucfirst($module). DIRECTORY_SEPARATOR.'views';
-		}
-		if(empty($this->_view)) {
-			$view = $this->initView($view_dir);
-		}
 
-		
+		if(empty($controller)){
+			$msg = " $controller 不是一个合法的控制器名";
+			ExceptionHandler::instance()->triggerError($msg, YAF_ERR_NOTFOUND_CONTROLLER);
+		}
+		// $controller = str_ireplace('index.php', 'index', $controller);
+		//支持 Base_TestController 或者 Base\TestController
 		$controller_class_name = ucfirst("{$controller}Controller");
-		$reflection = new ReflectionClass($controller_class_name);
-		$controller_class_object = $reflection->newInstance($request, $response, $view);
-		$init_method = $reflection->getMethod('init');
-		$init_methd_result = null;
-		if($init_method) {
-			$init_methd_result = $init_method->invoke($controller_class_object);
+		if(!preg_match("/^[a-z][a-z0-9_]+$/i",$controller_class_name )) {
+			$msg = "$controller_class_name 不是一个合法的控制器名";
+			throw new Controller($msg);
+		}
+		try {
+			$reflection = new ReflectionClass($controller_class_name);
+			$controller_class_object = $reflection->newInstance($request, $response, $this->_view);
+			$init_method = $reflection->getMethod('init');
+			$init_methd_result = null;
+			if($init_method) {
+				$init_methd_result = $init_method->invoke($controller_class_object);
+			}
+		}catch(\ReflectionException $reflection_exception) {
+			throw new Exception\LoadFailed\Controller($reflection_exception->getMessage() );
+		}catch(\Throwable $t) {
+			throw new Exception\LoadFailed\Controller($t->getMessage() ); // . __FILE__.':'.__LINE__."\n".$t->getTraceAsString()
 		}
 		/**
 		 * https://github.com/laruence/yaf/issues/121
@@ -473,45 +465,69 @@ final class Dispatcher {
 		if($init_methd_result === false) {
 			$action_result = $init_methd_result;
 		}else  {
-			$action_method = $reflection->getMethod($action . 'Action');		
-			$ob_content = ob_get_contents();
-			ob_end_clean();
-			ob_start();
-			if(!empty($ob_content)) {
-				// Application::app()->appendErrorMsg('start ob:'. $ob_content);
+			if(!preg_match("/^[_a-z][a-z0-9_]+$/i",$action )) {
+				$msg = "$action 不是一个合法的控制方法名";
+				throw new Action($msg);
 			}
-			$error_msg = Application::app()->getLastErrorMsg();
-			if(!empty($error_msg)) {
-				Application::app()->appendErrorMsg('Application error_msg:'. $ob_content);
+			try{				
+				$action_method = $reflection->getMethod($action . 'Action');	
+				$ob_content = ob_get_contents();
+				ob_end_clean();
+				ob_start();
+				if(!empty($ob_content)) {
+					// \Yaf\ExceptionHandler::instance()->appendDebugMsg('start ob:'. $ob_content);
+				}
+				$error_msg = Application::app()->getLastErrorMsg();
+				if(!empty($error_msg)) {
+					\Yaf\ExceptionHandler::instance()->appendDebugMsg('Application error_msg:'. $ob_content);
+				}
+				$action_params = $action_method->getParameters();
+				$action_args = [];
+				if(!empty($action_params)) foreach($action_params as $action_param_key =>  $action_param) {
+					$action_param_name = $action_param->getName();
+					$action_args[$action_param_key] = isset($params[$action_param_name])?$params[$action_param_name]:null;
+				}
+				/**
+				 * Action 通过return 返回的数据
+				 */
+				$action_result = $action_method->invokeArgs($controller_class_object, $action_args);
+			}catch(View $view_exception) {
+				throw new View($view_exception->getMessage() );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+			}catch(\ReflectionException $reflection_exception) {
+				throw new Exception\LoadFailed\Action($reflection_exception->getMessage() );
+			}catch(\Throwable $t) {
+				throw new Exception\LoadFailed\Action($t->getMessage(). __FILE__.':'.__LINE__ ."\n".$t->getTraceAsString() );
 			}
-			$action_params = $action_method->getParameters();
-			$action_args = [];
-			if(!empty($action_params)) foreach($action_params as $action_param_key =>  $action_param) {
-				$action_param_name = $action_param->getName();
-				$action_args[$action_param_key] = isset($params[$action_param_name])?$params[$action_param_name]:null;
-			}
-			/**
-			 * Action 通过return 返回的数据
-			 */
-			$action_result = $action_method->invokeArgs($controller_class_object, $action_args);
 			// var_export($action_result);
 			// var_export($this->_auto_render);
 			if($this->_auto_render  && $action_result !== false) {
-				$view_reflection = new ReflectionClass($view);
-				$view_method = $this->_instantly_flush=== true? 'display':'render';
-				$display_method = $view_reflection->getMethod($view_method);
-				$tpl_path =  str_replace('_', DIRECTORY_SEPARATOR, $controller).DIRECTORY_SEPARATOR.$action;
-				$action_render_result = $display_method->invoke($view, $tpl_path, []);
-				
-				if($this->_instantly_flush !==true) {
-					$response->setBody($action_render_result);
+				try {
+					$get_view_method = $reflection->getMethod('getView');	
+					$view_object = $get_view_method->invoke($controller_class_object);
+
+					$view_reflection = new ReflectionClass($view_object);
+					$view_method = $this->_instantly_flush=== true? 'display':'render';
+					$display_method = $view_reflection->getMethod($view_method);
+					$tpl_path =  str_replace('_', DIRECTORY_SEPARATOR, $controller).DIRECTORY_SEPARATOR.$action;
+					$action_render_result = $display_method->invoke($view_object, $tpl_path, []);
+					
+					if($this->_instantly_flush !==true) {
+						$response->setBody($action_render_result);
+					}
+					
+				}catch(View $view_exception) {
+					throw new View('View Error:'.$view_exception->getMessage() );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+				}catch(\ReflectionException $reflection_exception) {
+					throw new Exception\LoadFailed\Action('ReflectionException:'.$reflection_exception->getMessage() );
+				}catch(\Throwable $t) {
+					throw new Exception\LoadFailed\Action($t->getMessage(). __FILE__.':'.__LINE__ ."\n".$t->getTraceAsString() );
 				}
 				
-				Application::app()->appendErrorMsg('auto_render:'. $tpl_path);
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto_render:'. $tpl_path);
 			}else {
 				//TODO: 在action return false，这里会直_instantly_flush = true，不走response, 会影响到某些场景未考虑到的场景
 				$this->_instantly_flush = true;
-				Application::app()->appendErrorMsg('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
 				ob_end_flush();
 			}
 
@@ -538,7 +554,8 @@ final class Dispatcher {
 	 * @return \Yaf\Dispatcher
 	 */
 	public function throwException($flag){ 
-		$this->_throw_exception = $flag;
+		ExceptionHandler::instance()->throwException($flag);
+		return $this;
 	}
 
 	/**
@@ -551,7 +568,8 @@ final class Dispatcher {
 	 * @return \Yaf\Dispatcher
 	 */
 	public function catchException($flag){ 
-		$this->_catch_exception = $flag;
+		ExceptionHandler::instance()->catchException($flag);
+		return $this;
 	}
 
 	/**

@@ -3,8 +3,10 @@ namespace Yaf;
 
 use Bootstrap;
 use ReflectionMethod;
+use Yaf\Config\Ini;
 use Yaf\Exception\LoadFailed;
 use Yaf\Exception\StartupError;
+use Yaf\Request\Http;
 
 /**
  * \Yaf\Application provides a bootstrapping facility for applications which provides reusable resources, common- and module-based bootstrap classes and dependency checking.
@@ -48,16 +50,6 @@ final class Application {
 	 * 默认product
 	 */
 	protected $_environ = 'product';
-	/**
-	 * @since 2.1.2
-	 * @var int
-	 */
-	protected $_err_no = 0;
-	/**
-	 * @since 2.1.2
-	 * @var string
-	 */
-	protected $_err_msg = "";
 
 	/**
 	 * add by phpseven
@@ -65,9 +57,10 @@ final class Application {
 	 */
 	private $__loader = null;
 
-	private $__version = '0.2';
+	private $__version = '0.3';
 
 	private $__app_directory = '';
+
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-application.construct.php
@@ -77,12 +70,47 @@ final class Application {
 	public function __construct($config, $envrion = null){
 		ob_start();			
 		$this->_environ =  $envrion!==null ? $envrion : getenv('envType');
-		define("YAF\ENVIRON", $this->_environ);
-		define("YAF\VERSION", $this->__version);
-		$this->config = new \Yaf\Config\Ini($config);
-		
+		$this->__initConst();
+		$excetion_hanler = ExceptionHandler::instance();	
+		$this->__loader = Loader::getInstance();
+
 		self::$_app = $this;
+		$this->config = new Ini($config);
 	}
+
+	protected function __initConst() {		
+		define("YAF\ENVIRON", $this->_environ);
+		define("YAF_ENVIRON", \YAF\ENVIRON);
+		define("YAF\VERSION", $this->__version);
+		define("YAF_VERSION", \YAF\VERSION);
+	}
+
+
+	/**
+	 * 
+	 * @param callable $callback 
+	 * @return bool
+	 */
+	public function callFunction(callable $callback, array $args){
+		$is_handled = false;
+		if(is_array($callback) && isset($callback[0]) &&  isset($callback[1]) ) {
+			$reflection_method = new \ReflectionMethod($callback[0], $callback[1]);
+			$method_caller = null;
+			if(is_object($callback[0])) {
+				$method_caller = $callback[0];
+			}
+			if($reflection_method) {
+				$is_handled = $reflection_method->invokeArgs($method_caller,$args);
+			}
+		}else  if(is_callable($callback)){
+			$reflection_function = new \ReflectionFunction($callback);
+			if($reflection_function) {
+				$is_handled = $reflection_function->invoke($args);
+			}
+		}
+		return $is_handled;
+	}
+
 
 	/**
 	 * Run a \Yaf\Application, let the \Yaf\Application accept a request, and route the request, dispatch to controller/action, and render response.
@@ -177,7 +205,7 @@ final class Application {
 		$directory_path =	$this->config->get('application.directory');
 		$this->setAppDirectory($directory_path);
 		$library_path = $this->config->get('application.library');
-		$this->__loader = Loader::getInstance($library_path);
+		$this->__loader->initLibrary($library_path);
 
 
 
@@ -195,11 +223,17 @@ final class Application {
 		if(!class_exists('Bootstrap')) {
 			throw new LoadFailed("bootstrap class is NOT EXISTS!");
 		}
-		$bootstrap = new Bootstrap();		
-		$reflection = new \ReflectionClass($bootstrap);
-		$methods_public = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
-		if(!empty($methods_public)) foreach($methods_public as  $method) {
-			$method->invoke($bootstrap, $this->dispatcher);
+		try {
+			$bootstrap = new Bootstrap();		
+			$reflection = new \ReflectionClass($bootstrap);
+			$methods_public = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
+			if(!empty($methods_public)) foreach($methods_public as  $method) {
+				$method->invoke($bootstrap, $this->dispatcher);
+			}		
+		}catch(\ReflectionException $reflection_exception) {
+			throw new Exception\LoadFailed\Action("bootstrap init failed:" .$reflection_exception->getMessage() .__FILE__ . ':'.__LINE__  );
+		}catch(\Throwable $t) {
+			throw new Exception\LoadFailed\Action("bootstrap init failed2:".$t->getMessage() .$t->getTraceAsString());
 		}
 		return $this;
 	}
@@ -267,42 +301,36 @@ final class Application {
 	}
 
 	/**
+	 *  调用 ExceptionHandler::instance() 返回最后的错误码
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.getlasterrorno.php
 	 *
 	 * @return int
 	 */
 	public function getLastErrorNo(){ 
-		return $this->_err_no;
+		return ExceptionHandler::instance()->getCode();
 	}
 
 	/**
+	 *  调用 ExceptionHandler::instance() 返回最后的错误信息
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.getlasterrormsg.php
 	 *
 	 * @return string
 	 */
 	public function getLastErrorMsg(){ 
-		return $this->_err_msg;
+		return ExceptionHandler::instance()->getMessage();
 	}
 	
-	/**
-	 * add by phpseven
-	 * @param string $msg 
-	 * @return string 
-	 */
-	public function appendErrorMsg(string $msg){ 
-		$this->_err_msg .= $msg . "\n";
-		return $this->_err_msg;
-	}
 
+	
 	/**
-	 *
+	 *  调用 ExceptionHandler::instance() 清空最后的错误信息
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.clearlasterror.php
 	 */
 	public function clearLastError(){ 
-		$this->_err_msg = '';
+		ExceptionHandler::instance()->clearLastError();
 	}
 
 	/**

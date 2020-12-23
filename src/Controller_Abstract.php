@@ -117,20 +117,20 @@ abstract class Controller_Abstract {
 	 * @return \Yaf\View_Interface
 	 */
 	public function getView(){ 
+		if(empty($this->_view)) {
+			$module = $this->_request->getModuleName();
+			$directory_path =	Application::app()->getAppDirectory();
+			$default_module = Dispatcher::getInstance()->getDefaultModule();
+			if(empty($module) ||$module === $default_module) {
+				$view_dir = $directory_path.DIRECTORY_SEPARATOR.'views';
+			}else {				
+				$view_dir = $directory_path. DIRECTORY_SEPARATOR.'modules'. DIRECTORY_SEPARATOR.ucfirst($module). DIRECTORY_SEPARATOR.'views';
+			}
+			$this->_view = Dispatcher::getInstance()->initView($view_dir);
+		}
 		return $this->_view;
 	}
 
-	/**
-	 * @deprecated not_implemented 这个在dispatch中实现
-	 * @link http://www.php.net/manual/en/yaf-controller-abstract.initview.php
-	 *
-	 * @param array $options
-	 *
-	 * @return \Yaf\Response_Abstract
-	 */
-	public function initView(array $options = null){ 
-		throw new Exception(__METHOD__  .'在dispatch中实现，请调用dispatch的initView');
-	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.setviewpath.php
@@ -242,10 +242,14 @@ abstract class Controller_Abstract {
 	 * @param \Yaf\View_Interface $view
 	 * @param array $invokeArgs  TODO: NOT USED dispatch 未传递此数据
 	 */
-	public function __construct(\Yaf\Request_Abstract $request, \Yaf\Response_Abstract $response, \Yaf\View_Interface $view, array $invokeArgs = null){ 
+	public function __construct(\Yaf\Request_Abstract $request, \Yaf\Response_Abstract $response, \Yaf\View_Interface $view =null, array $invokeArgs = null){ 
 		$this->_request = $request;
 		$this->_response = $response;
-		$this->_view = $view;
+		if(!empty($view)) {
+			$this->_view = $view;
+		}else {
+			$this->_view = $this->getView();
+		}
 		$this->_invoke_args = $invokeArgs;
 	}
 

@@ -46,7 +46,7 @@ interface View_Interface {
 	 * @param array $tpl_vars
 	 * @return string
 	 */
-	function render($tpl, array $tpl_vars = null);
+	function render($tpl, array $tpl_vars = []);
 
 	/**
 	 * Set the templates base directory, this is usually called by \Yaf\Dispatcher

@@ -202,6 +202,9 @@ class Http extends \Yaf\Request_Abstract {
 			
 		}while(0);
 
+		// if(empty($request_uri) || $request_uri =='/index.php'){
+		// 	$request_uri = '/';
+		// }
 		$this->method = strtolower($_SERVER['REQUEST_METHOD']);
 		// echo "action_result $request_uri \n";
 		// exit;

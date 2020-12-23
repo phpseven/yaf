@@ -1,6 +1,9 @@
 <?php
 namespace Yaf ;
 
+use Yaf\Exception\LoadFailed\Controller;
+use Yaf\Exception\TypeError;
+
 /**
  * <p><b>\Yaf\Loader</b> introduces a comprehensive autoloading solution for Yaf.</p>
  * <br/>
@@ -39,7 +42,7 @@ class Loader {
 	 * php脚本的扩展名
 	 * @var string
 	 */
-	private $ext;
+	private $ext = '.php';
 	/**
 	 * @link http://www.php.net/manual/en/yaf-loader.construct.php
 	 */
@@ -70,74 +73,94 @@ class Loader {
 	 */
 	public function autoload($class_name){ 
 
-		$app = Application::app();
-		$directory_path =	$app->getAppDirectory();
-		$default_module = strtolower($app->getDispatcher()->getDefaultModule());
-		$request = $app->getDispatcher()->getRequest();		
-		$module = $request ? $request->getModuleName() : $default_module;
-        $class_name = str_replace('_', '\\', $class_name);
-        $class = str_replace('\\\\', '\\', $class_name);
-		
-        //获取类信息
-		$exploded = explode('\\', $class);
-        // foreach ($exploded as $key => $_explode_value) {
-        //     $exploded[$key] = $_explode_value;
-		// }
-		$last_key = array_key_last($exploded);
-		$type = $this->__identify_category($class);
-		if($type === self::YAF_CLASS_NAME_NORMAL) {
-			$lib_dir = $this->_library;
-		}else  {
-			$type_name = $this->__class_name_map[$type];
-			$lib_dir_base = $directory_path. DIRECTORY_SEPARATOR .$type_name.'s';
-			$lib_dir = $directory_path. DIRECTORY_SEPARATOR .'modules'. DIRECTORY_SEPARATOR.ucfirst($module). DIRECTORY_SEPARATOR.$type_name.'s';
-			if($type == self::YAF_CLASS_NAME_CONTROLLER) {
-				array_walk($exploded, function(&$var){
-					$var = ucfirst(strtolower(trim($var)));
-				});
-			}else {
-				array_walk($exploded, function(&$var){
-					$var = (strtolower(trim($var)));
-				});
-				$exploded[$last_key] = ucfirst($exploded[$last_key]);
-			}
-			$exploded[$last_key] = str_ireplace($type_name, '', $exploded[$last_key] );
+		\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto load: start: '.$class_name);
+
+		if(!preg_match("/^[a-z\\][a-z0-9_\\\\]+$/i",$class_name )) {
+			$msg = "$class_name 不是一个合法的类名1";
+			\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto load: '.$msg);
+			return false;
 		}
-		$class_file_name = implode(DIRECTORY_SEPARATOR, $exploded) . $this->ext;
+		
+		// Yaf加载
+		if(strpos(strtolower($class_name), 'yaf\\' ) ===0) {			
+			$class = str_replace('\\\\', '\\', $class_name);
+			$exploded = explode('\\', $class);
+			unset($exploded[0]);
+			$lib_dir = __DIR__;
+			$class_file_name = implode(DIRECTORY_SEPARATOR, $exploded) . $this->ext;	
+			$file_find[] =$lib_dir .DIRECTORY_SEPARATOR. $class_file_name;
+			$type = self::YAF_CLASS_NAME_NORMAL;
+		} else {				
+			
+			$app = Application::app();
+			$directory_path =	$app->getAppDirectory();
+			$default_module = strtolower($app->getDispatcher()->getDefaultModule());
+			$request = $app->getDispatcher()->getRequest();		
+			$module = $request ? $request->getModuleName() : $default_module;
+			
+			$class = str_replace('_', '\\', $class_name);
+			$class = str_replace('\\\\', '\\', $class);
+			$exploded = explode('\\', $class);
 
-
-		$load_file = $lib_dir .DIRECTORY_SEPARATOR. $class_file_name;
-        if (!file_exists($load_file)) {   //文件不存在
-			Application::app()->appendErrorMsg('auto load: file is not exists: '.$load_file);
-			if(isset($lib_dir_base)) {
-				$load_file = $lib_dir_base .DIRECTORY_SEPARATOR. $class_file_name;
-				if (!file_exists($load_file)) {   //文件不存在
-					Application::app()->appendErrorMsg('auto load: file is not exists2: '.$load_file);
-					return false;
+			
+			$last_key = array_key_last($exploded);
+			$type = $this->__identify_category($class);
+			if($type === self::YAF_CLASS_NAME_NORMAL) {	//library
+				$lib_dir = $this->_library;
+				$class_file_name = implode(DIRECTORY_SEPARATOR, $exploded) . $this->ext;
+				$file_find[] =$lib_dir .DIRECTORY_SEPARATOR. $class_file_name;
+			}else  {	//controller model plugin
+				$type_name = $this->__class_name_map[$type];
+				$lib_dir_base = $directory_path. DIRECTORY_SEPARATOR .$type_name.'s';
+				$lib_dir = $directory_path. DIRECTORY_SEPARATOR .'modules'. DIRECTORY_SEPARATOR.ucfirst($module). DIRECTORY_SEPARATOR.$type_name.'s';
+				if($type == self::YAF_CLASS_NAME_CONTROLLER) {
+					array_walk($exploded, function(&$var){
+						$var = ucfirst(strtolower(trim($var)));
+					});
+				}else { 	
+					array_walk($exploded, function(&$var){
+						$var = (strtolower(trim($var)));
+					});
+					$exploded[$last_key] = ucfirst($exploded[$last_key]);
 				}
+				$exploded[$last_key] = str_ireplace($type_name, '', $exploded[$last_key] );
+				$class_file_name = implode(DIRECTORY_SEPARATOR, $exploded) . $this->ext;
+				
+				$file_find[] =$lib_dir .DIRECTORY_SEPARATOR. $class_file_name;
+				if(isset($lib_dir_base)) {
+					$file_find[] =$lib_dir_base .DIRECTORY_SEPARATOR. $class_file_name;
+				}
+			}				
+		}
+		foreach($file_find as $load_file) {			
+			if (!file_exists($load_file)  || !is_readable($load_file)) {   //文件不存在
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file is not exists: '.$load_file);
+			}else {
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file exists: '.$load_file);
+				require_once($load_file);
+				break;
 			}
-        }
-        require_once($load_file);
+		}
+		
 		if (!class_exists($class_name)) {    //类不存在
-			Application::app()->appendErrorMsg('auto load: class is not exists: '.$class_name);
+			\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: class is not exists: '.$class_name .'====' .$load_file);
+			if($type === self::YAF_CLASS_NAME_MODEL) {
+				throw new Exception\LoadFailed\Model("Model $class_name is not exists");
+			}
+			if($type === self::YAF_CLASS_NAME_CONTROLLER) {
+				throw new Exception\LoadFailed\Controller("Controller $class_name is not exists");
+			}
+			if($type === self::YAF_CLASS_NAME_PLUGIN) {
+				throw new Exception\LoadFailed\Plugin("Plugin $class_name is not exists");
+			}
             return false;
 		}
-		Application::app()->appendErrorMsg('class loaded:  '.$class_name);
+		\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto loaded ok :  '.$class_name);
         return true;
 	}
 
-	/**
-	 * 
-#define YAF_LOADER_CONTROLLER		"Controller"
-#define YAF_LOADER_MODEL			"Model"
-#define YAF_LOADER_PLUGIN			"Plugin"
-#define YAF_LOADER_RESERVERD		"Yaf_"
 
-#define YAF_CLASS_NAME_NORMAL       0
-#define YAF_CLASS_NAME_MODEL        1
-#define YAF_CLASS_NAME_PLUGIN       2
-#define YAF_CLASS_NAME_CONTROLLER   3
-	 */
+	
 
 	const YAF_CLASS_NAME_NORMAL = 0;
 	const YAF_CLASS_NAME_MODEL = 1;
@@ -163,6 +186,14 @@ class Loader {
 	}
 
 
+	public function initLibrary($local_library_path = null, $global_library_path = null) {
+		$instance = self::$_instance;
+		$instance->_library = $local_library_path;
+		$instance->_global_library = $global_library_path;
+		$app = Application::app();
+		$application_config = $app->getConfig()->get('application');	
+		$instance->ext = '.'.$application_config['ext'];
+	}
 
 
 	/**
@@ -173,16 +204,10 @@ class Loader {
 	 *
 	 * @return \Yaf\Loader
 	 */
-	public static function getInstance($local_library_path = null, $global_library_path = null){ 
+	public static function getInstance(){ 
 		if(empty(self::$_instance)) {
-			$app = Application::app();
-			$instance = new self();
-			$instance->_library = $local_library_path;
-			$instance->_global_library = $global_library_path;
-			$application_config = $app->getConfig()->get('application');	
-			$instance->ext = '.'.$application_config['ext'];
-			spl_autoload_register([$instance, 'autoload']);
-			self::$_instance = $instance;
+			self::$_instance = new self();
+			spl_autoload_register([self::$_instance, 'autoload']);
 		}
 		return self::$_instance;
 	}
@@ -230,7 +255,13 @@ class Loader {
 	 *
 	 * @return bool
 	 */
-	public static function import($file){ }
+	public static function import($file){ 
+		if(file_exists($file) && is_readable($file)) {
+			require_once($file);
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * @since 2.1.4

@@ -57,7 +57,13 @@ final class Session implements \Iterator, \Traversable, \ArrayAccess, \Countable
 	 *
 	 * @return \Yaf\Session
 	 */
-	public function start(){ 
+	public function start(){
+		$ob = ob_get_contents();
+        if($ob !== false) {
+            ExceptionHandler::instance()->appendDebugMsg($ob);
+            ob_end_clean();
+		}
+		ob_start();
 		session_start();
 	}
 

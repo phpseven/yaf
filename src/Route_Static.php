@@ -49,20 +49,20 @@ class Route_Static implements \Yaf\Route_Interface {
 			$uri_explode = explode('/', $uri);		//TODO: FILLTER
 			array_walk($uri_explode,function (&$var)
 			{
-				$var =  strtolower(trim($var));
+				$var =  (trim($var));
 			});
 			$explode_count = count($uri_explode);
 			$action_prefer = $application->getConfig()->get('yaf.action_prefer');
 			$module_limit = $application->getModules();
 			array_walk($module_limit,function (&$var)
 			{
-				$var =  strtolower(trim($var));
+				$var =  (trim($var));
 			});
 			$param_start =	false;
 			if ($explode_count === 1 ) {			//1个参数: 赋值给controller
 				$controller = $uri_explode[0];
 			} else  {									//2个参数:
-				if(in_array($uri_explode[0], $module_limit)) {	//如果参数0是module，则，参数1为controller，参数2为action
+				if(in_array(strtolower($uri_explode[0]), $module_limit)) {	//如果参数0是module，则，参数1为controller，参数2为action
 					$module = $uri_explode[0];
 					$controller = $uri_explode[1];
 					isset($uri_explode[2]) && $action = $uri_explode[2];
