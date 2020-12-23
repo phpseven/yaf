@@ -1,13 +1,34 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
 /**
- * <p>by default, \Yaf\Router only have a <b>\Yaf\Route_Static</b> as its default route.</p>
- * <br/>
- * <p><b>\Yaf\Route_Static</b> is designed to handle 80% of normal requirements.</p>
- * <br/>
- * <b>Note:</b>
- * <p> it is unnecessary to instance a <b>\Yaf\Route_Static</b>, also unnecessary to add it into \Yaf\Router's routes stack, since there is always be one in \Yaf\Router's routes stack, and always be called at the last time.</p>
+ *  by default, \Yaf\Router only have a  \Yaf\Route_Static  as its default route.
+ 
+ *   \Yaf\Route_Static  is designed to handle 80% of normal requirements.
+ 
+ *  Note: 
+ *   it is unnecessary to instance a  \Yaf\Route_Static , also unnecessary to add it into \Yaf\Router's routes stack, since there is always be one in \Yaf\Router's routes stack, and always be called at the last time.
  *
  * @link http://www.php.net/manual/en/class.yaf-route-static.php
  *
@@ -97,7 +118,7 @@ class Route_Static implements \Yaf\Route_Interface {
 	}
 
 	/**
-	 * <p><b>\Yaf\Route_Static::assemble()</b> - Assemble a url
+	 *   \Yaf\Route_Static::assemble()  - Assemble a url
 	 *
 	 * @link http://www.php.net/manual/en/yaf-route-static.assemble.php
 	 *

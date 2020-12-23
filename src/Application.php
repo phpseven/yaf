@@ -1,4 +1,25 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf;
 
 use Bootstrap;
@@ -6,16 +27,15 @@ use ReflectionMethod;
 use Yaf\Config\Ini;
 use Yaf\Exception\LoadFailed;
 use Yaf\Exception\StartupError;
-use Yaf\Request\Http;
 
 /**
  * \Yaf\Application provides a bootstrapping facility for applications which provides reusable resources, common- and module-based bootstrap classes and dependency checking.
- * <br/>
- * <b>Note:</b>
- * <p>
+ * Yaf_Application代表一个产品/项目, 它负责接收请求, 协调路由, 分发, 执行, 输出, 单例模式。
+ *  Note: 
+ *  
  * \Yaf\Application implements the singleton pattern, and \Yaf\Application can not be serialized or un-serialized which will cause problem when you try to use PHPUnit to write some test case for Yaf.<br/>
- * You may use &#64;backupGlobals annotation of PHPUnit to control the backup and restore operations for global variables. thus can solve this problem.
- * </p>
+ * You may use  backupGlobals annotation of PHPUnit to control the backup and restore operations for global variables. thus can solve this problem.
+ * 
  * @link http://www.php.net/manual/en/class.yaf-application.php
  */
 
@@ -23,7 +43,7 @@ final class Application {
 
 	/**
 	 * @var \Yaf\Application
-	 * 单例
+	 * 单例的实例
 	 */
 	protected static $_app;
 	/**
@@ -36,34 +56,45 @@ final class Application {
 	 * 调度器
 	 */
 	protected $dispatcher;
-	/**
-	 * @var array
+/**
+	 * @var string[]
 	 * 允许操作的modules
 	 */
 	protected $_modules;
 	/**
-	 * @var string  未找到相关调用点
+	 * @var false  
+	 * @deprecated not used
 	 */
-	protected $_running = "";
+	protected $_running = false;
 	/**
 	 * @var string 
-	 * 默认product
+	 * 环境：在构造函数传入，或者从系统环境变量 evnType 获取
+	 * 默认 product
 	 */
 	protected $_environ = 'product';
 
 	/**
-	 * add by phpseven
+	 * Loader变量
+	 * @author phpseven
 	 * @var \Yaf\Loader
 	 */
 	private $__loader = null;
 
-	private $__version = '0.3';
+	/**
+	 * yafphp版本号
+	 * @var string
+	 */
+	private $__version = '0.5';
 
+	/**
+	 * 本系统的根目录
+	 * @var string
+	 */
 	private $__app_directory = '';
 
 
 	/**
-	 * @link http://www.php.net/manual/en/yaf-application.construct.php
+	 * @link http://www.php.net/classes/Yaf-Application.html#method___construct
 	 *
 	 * @throws \Yaf\Exception\TypeError|\Yaf\Exception\StartupError
 	 */
@@ -304,10 +335,11 @@ final class Application {
 	 *  调用 ExceptionHandler::instance() 返回最后的错误码
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.getlasterrorno.php
+	 * @deprecated move to  ExceptionHandler
 	 *
 	 * @return int
 	 */
-	public function getLastErrorNo(){ 
+	public function getLastErrorNo(){
 		return ExceptionHandler::instance()->getCode();
 	}
 
@@ -316,6 +348,7 @@ final class Application {
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.getlasterrormsg.php
 	 *
+	 * @deprecated move to  ExceptionHandler
 	 * @return string
 	 */
 	public function getLastErrorMsg(){ 
@@ -328,6 +361,7 @@ final class Application {
 	 *  调用 ExceptionHandler::instance() 清空最后的错误信息
 	 * @since 2.1.2
 	 * @link http://www.php.net/manual/en/yaf-application.clearlasterror.php
+	 * @deprecated move to  ExceptionHandler
 	 */
 	public function clearLastError(){ 
 		ExceptionHandler::instance()->clearLastError();

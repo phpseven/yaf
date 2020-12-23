@@ -1,19 +1,40 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
 /**
- * <p><b>\Yaf\Controller_Abstract</b> is the heart of Yaf's system. MVC stands for Model-View-Controller and is a design pattern targeted at separating application logic from display logic.</p>
- * <br/>
- * <p>Every custom controller shall inherit <b>\Yaf\Controller_Abstract</b>.</p>
- * <br/>
- * <p>You will find that you can not define __construct function for your custom controller, thus, <b>\Yaf\Controller_Abstract</b> provides a magic method: \Yaf\Controller_Abstract::init().</p>
- * <br/>
- * <p>If you have defined a init() method in your custom controller, it will be called as long as the controller was instantiated.</p>
- * <br/>
- * <p>Action may have arguments, when a request coming, if there are the same name variable in the request parameters(see \Yaf\Request_Abstract::getParam()) after routed, Yaf will pass them to the action method (see \Yaf\Action_Abstract::execute()).</p>
- * <br/>
- * <b>Note:</b>
- * <p>These arguments are directly fetched without filtering, it should be carefully processed before use them.</p>
+ *   \Yaf\Controller_Abstract  is the heart of Yaf's system. MVC stands for Model-View-Controller and is a design pattern targeted at separating application logic from display logic.
+ 
+ *  Every custom controller shall inherit  \Yaf\Controller_Abstract .
+ 
+ *  You will find that you can not define __construct function for your custom controller, thus,  \Yaf\Controller_Abstract  provides a magic method: \Yaf\Controller_Abstract::init().
+ 
+ *  If you have defined a init() method in your custom controller, it will be called as long as the controller was instantiated.
+ 
+ *  Action may have arguments, when a request coming, if there are the same name variable in the request parameters(see \Yaf\Request_Abstract::getParam()) after routed, Yaf will pass them to the action method (see \Yaf\Action_Abstract::execute()).
+ 
+ *  Note: 
+ *  These arguments are directly fetched without filtering, it should be carefully processed before use them.
  *
  * @link http://www.php.net/manual/en/class.yaf-controller-abstract.php
  */
@@ -154,15 +175,15 @@ abstract class Controller_Abstract {
 	}
 
 	/**
-	 * <p>forward current execution process to other action.</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this method doesn't switch to the destination action immediately, it will take place after current flow finish.</p>
-	 * <br/>
-	 * <b>Notice, there are 3 available method signatures:</b>
-	 * <p>\Yaf\Controller_Abstract::forward ( string $module , string $controller , string $action [, array $parameters ] )</p>
-	 * <p>\Yaf\Controller_Abstract::forward ( string $controller , string $action [, array $parameters ] )</p>
-	 * <p>\Yaf\Controller_Abstract::forward ( string $action [, array $parameters ] )</p>
+	 *  forward current execution process to other action.
+	 
+	 *  Note: 
+	 *  this method doesn't switch to the destination action immediately, it will take place after current flow finish.
+	 
+	 *  Notice, there are 3 available method signatures: 
+	 *  \Yaf\Controller_Abstract::forward ( string $module , string $controller , string $action [, array $parameters ] )
+	 *  \Yaf\Controller_Abstract::forward ( string $controller , string $action [, array $parameters ] )
+	 *  \Yaf\Controller_Abstract::forward ( string $action [, array $parameters ] )
 	 *
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.forward.php
 	 *
@@ -222,7 +243,7 @@ abstract class Controller_Abstract {
 
 	/**
      * 此方法在c扩展中不存在，只用用于初始化，不要在控制器调用
-	 * <p>\Yaf\Controller_Abstract::__construct() is final, which means users can not override it. but users can define <b>\Yaf\Controller_Abstract::init()</b>, which will be called after controller object is instantiated.</p>
+	 *  \Yaf\Controller_Abstract::__construct() is final, which means users can not override it. but users can define  \Yaf\Controller_Abstract::init() , which will be called after controller object is instantiated.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.init.php
 	 *
@@ -232,7 +253,7 @@ abstract class Controller_Abstract {
 	}
 
 	/**
-	 * <b>\Yaf\Controller_Abstract</b>::__construct() is final, which means it can not be overridden. You may want to see \Yaf\Controller_Abstract::init() instead.
+	 *  \Yaf\Controller_Abstract ::__construct() is final, which means it can not be overridden. You may want to see \Yaf\Controller_Abstract::init() instead.
 	 *
 	 * @see \Yaf\Controller_Abstract::init()
 	 * @link http://www.php.net/manual/en/yaf-controller-abstract.construct.php

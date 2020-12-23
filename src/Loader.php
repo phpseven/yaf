@@ -1,20 +1,41 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
 use Yaf\Exception\LoadFailed\Controller;
 use Yaf\Exception\TypeError;
 
 /**
- * <p><b>\Yaf\Loader</b> introduces a comprehensive autoloading solution for Yaf.</p>
- * <br/>
- * <p>The first time an instance of \Yaf\Application is retrieved, <b>\Yaf\Loader</b> will instance a singleton, and registers itself with spl_autoload. You retrieve an instance using the \Yaf\Loader::getInstance()</p>
- * <br/>
- * <p><b>\Yaf\Loader</b> attempt to load a class only one shot, if failed, depend on yaf.use_spl_autoload, if this config is On \Yaf\Loader::autoload() will return FALSE, thus give the chance to other autoload function. if it is Off (by default), \Yaf\Loader::autoload() will return TRUE, and more important is that a very useful warning will be triggered (very useful to find out why a class could not be loaded).</p>
- * <br/>
- * <b>Note:</b>
- * <p>Please keep yaf.use_spl_autoload Off unless there is some library have their own autoload mechanism and impossible to rewrite it.</p>
- * <br/>
- * <p>If you want <b>\Yaf\Loader</b> search some classes(libraries) in the local class directory(which is defined in application.ini, and by default, it is application.directory . "/library"), you should register the class prefix using the \Yaf\Loader::registerLocalNameSpace()</p>
+ *   \Yaf\Loader  introduces a comprehensive autoloading solution for Yaf.
+ 
+ *  The first time an instance of \Yaf\Application is retrieved,  \Yaf\Loader  will instance a singleton, and registers itself with spl_autoload. You retrieve an instance using the \Yaf\Loader::getInstance()
+ 
+ *   \Yaf\Loader  attempt to load a class only one shot, if failed, depend on yaf.use_spl_autoload, if this config is On \Yaf\Loader::autoload() will return FALSE, thus give the chance to other autoload function. if it is Off (by default), \Yaf\Loader::autoload() will return TRUE, and more important is that a very useful warning will be triggered (very useful to find out why a class could not be loaded).
+ 
+ *  Note: 
+ *  Please keep yaf.use_spl_autoload Off unless there is some library have their own autoload mechanism and impossible to rewrite it.
+ 
+ *  If you want  \Yaf\Loader  search some classes(libraries) in the local class directory(which is defined in application.ini, and by default, it is application.directory . "/library"), you should register the class prefix using the \Yaf\Loader::registerLocalNameSpace()
  * @link http://www.php.net/manual/en/class.yaf-loader.php
  *
  */
@@ -213,12 +234,12 @@ class Loader {
 	}
 
 	/**
-	 * <p>Register local class prefix name, \Yaf\Loader search classes in two library directories, the one is configured via application.library.directory(in application.ini) which is called local library directory; the other is configured via yaf.library (in php.ini) which is called global library directory, since it can be shared by many applications in the same server.</p>
-	 * <br/>
-	 * <p>When an autoloading is triggered, \Yaf\Loader will determine which library directory should be searched in by examining the prefix name of the missed classname. If the prefix name is registered as a local namespace then look for it in local library directory, otherwise look for it in global library directory.</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>If yaf.library is not configured, then the global library directory is assumed to be the local library directory. in that case, all autoloading will look for local library directory. But if you want your Yaf application be strong, then always register your own classes as local classes.</p>
+	 *  Register local class prefix name, \Yaf\Loader search classes in two library directories, the one is configured via application.library.directory(in application.ini) which is called local library directory; the other is configured via yaf.library (in php.ini) which is called global library directory, since it can be shared by many applications in the same server.
+	 
+	 *  When an autoloading is triggered, \Yaf\Loader will determine which library directory should be searched in by examining the prefix name of the missed classname. If the prefix name is registered as a local namespace then look for it in local library directory, otherwise look for it in global library directory.
+	 
+	 *  Note: 
+	 *  If yaf.library is not configured, then the global library directory is assumed to be the local library directory. in that case, all autoloading will look for local library directory. But if you want your Yaf application be strong, then always register your own classes as local classes.
 	 * @link http://www.php.net/manual/en/yaf-loader.registerlocalnamespace.php
 	 *
 	 * @param string|string[] $name_prefix a string or a array of class name prefix. all class prefix with these prefix will be loaded in local library path.

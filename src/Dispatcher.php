@@ -1,4 +1,25 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
 use ReflectionClass;
@@ -10,8 +31,8 @@ use Yaf\Exception\TypeError;
 use Yaf\View\Simple;
 
 /**
- * <p><b>\Yaf\Dispatcher</b> purpose is to initialize the request environment, route the incoming request, and then dispatch any discovered actions; it aggregates any responses and returns them when the process is complete.</p><br/>
- * <p><b>\Yaf\Dispatcher</b> also implements the Singleton pattern, meaning only a single instance of it may be available at any given time. This allows it to also act as a registry on which the other objects in the dispatch process may draw.</p>
+ *   \Yaf\Dispatcher  purpose is to initialize the request environment, route the incoming request, and then dispatch any discovered actions; it aggregates any responses and returns them when the process is complete.<br/>
+ *   \Yaf\Dispatcher  also implements the Singleton pattern, meaning only a single instance of it may be available at any given time. This allows it to also act as a registry on which the other objects in the dispatch process may draw.
  *
  * @link http://www.php.net/manual/en/class.yaf-dispatcher.php
  */
@@ -43,8 +64,7 @@ final class Dispatcher {
 	protected $_auto_render = true;
 	/**
 	 * @var bool
-	 * true： dispatch 返回 Response对象
-	 * false：dispatch 返回 action执行结果
+	 * @deprecated response is Pass by reference, dispacher will always return action result 
 	 */
 	protected $_return_response = false;
 	/**
@@ -109,9 +129,9 @@ final class Dispatcher {
 	}
 
 	/**
-	 * <p>disable view engine, used in some app that user will output by himself</p><br/>
-	 * <b>Note:</b>
-	 * <p>you can simply return FALSE in a action to prevent the auto-rendering of that action</p>
+	 *  disable view engine, used in some app that user will output by himself<br/>
+	 *  Note: 
+	 *  you can simply return FALSE in a action to prevent the auto-rendering of that action
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.disableview.php
 	 *
@@ -211,8 +231,8 @@ final class Dispatcher {
 	}
 
 	/**
-	 * <p>Set error handler for Yaf. when application.dispatcher.throwException is off, Yaf will trigger catch-able error while unexpected errors occurred.</p><br/>
-	 * <p>Thus, this error handler will be called while the error raise.</p>
+	 *  Set error handler for Yaf. when application.dispatcher.throwException is off, Yaf will trigger catch-able error while unexpected errors occurred.<br/>
+	 *  Thus, this error handler will be called while the error raise.
 	 *	设置错误处理函数, 一般在appcation.throwException关闭的情况下, Yaf会在出错的时候触发错误, 这个时候, 如果设置了错误处理函数, 则会把控制交给错误处理函数处理.
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.seterrorhandler.php
 	 *
@@ -287,18 +307,18 @@ final class Dispatcher {
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.returnresponse.php
-	 *
+	 * @deprecated response is Pass by reference, dispacher will always return action result 
 	 * @param bool $flag
 	 * @return \Yaf\Dispatcher
 	 */
 	public function returnResponse($flag){ 
-		$this->_return_response = $flag;
+		ExceptionHandler::instance()->appendDebugMsg("response is Pass by reference, dispacher will always return action result");
 	}
 
 	/**
-	 * <p>\Yaf\Dispatcher will render automatically after dispatches an incoming request, you can prevent the rendering by calling this method with $flag TRUE</p><br/>
-	 * <b>Note:</b>
-	 * <p>you can simply return FALSE in a action to prevent the auto-rendering of that action</p>
+	 *  \Yaf\Dispatcher will render automatically after dispatches an incoming request, you can prevent the rendering by calling this method with $flag TRUE<br/>
+	 *  Note: 
+	 *  you can simply return FALSE in a action to prevent the auto-rendering of that action
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.autorender.php
 	 *
@@ -344,14 +364,14 @@ final class Dispatcher {
 	}
 
 	/**
-	 * <p>This method does the heavy work of the \Yaf\Dispatcher. It take a request object.</p><br/>
-	 * <p>The dispatch process has three distinct events:</p>
+	 *  This method does the heavy work of the \Yaf\Dispatcher. It take a request object.<br/>
+	 *  The dispatch process has three distinct events:
 	 * <ul>
 	 * <li>Routing</li>
 	 * <li>Dispatching</li>
 	 * <li>Response</li>
 	 * </ul>
-	 * <p>
+	 *  
 	 * 
 	 * Routing takes place exactly once, using the values in the request object when dispatch() is called. 
 	 * Dispatching takes place in a loop; a request may either indicate multiple actions to dispatch, 
@@ -360,7 +380,7 @@ final class Dispatcher {
 	 * route 只执行一次，
 	 * 一次请求中，当控制调用了doDispatch或者调用了 forward， doDispatch会执行多次
 	 * 全部执行完之后会返回$response
-	 * </p>
+	 * 
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.dispatch.php
 	 *
@@ -435,14 +455,14 @@ final class Dispatcher {
 		$params = $request->getParams();
 
 		if(empty($controller)){
-			$msg = " $controller 不是一个合法的控制器名";
-			ExceptionHandler::instance()->triggerError($msg, YAF_ERR_NOTFOUND_CONTROLLER);
+			$msg = "Controller Name [$controller] is empty string";
+			throw new Controller($msg);
 		}
 		// $controller = str_ireplace('index.php', 'index', $controller);
 		//支持 Base_TestController 或者 Base\TestController
 		$controller_class_name = ucfirst("{$controller}Controller");
 		if(!preg_match("/^[a-z][a-z0-9_]+$/i",$controller_class_name )) {
-			$msg = "$controller_class_name 不是一个合法的控制器名";
+			$msg = " $controller_class_name is not a vaild controller";
 			throw new Controller($msg);
 		}
 		try {
@@ -466,21 +486,17 @@ final class Dispatcher {
 			$action_result = $init_methd_result;
 		}else  {
 			if(!preg_match("/^[_a-z][a-z0-9_]+$/i",$action )) {
-				$msg = "$action 不是一个合法的控制方法名";
+				$msg = "$controller_class_name $action is not a vaild controller action";
 				throw new Action($msg);
 			}
 			try{				
 				$action_method = $reflection->getMethod($action . 'Action');	
-				$ob_content = ob_get_contents();
-				ob_end_clean();
-				ob_start();
-				if(!empty($ob_content)) {
-					// \Yaf\ExceptionHandler::instance()->appendDebugMsg('start ob:'. $ob_content);
-				}
-				$error_msg = Application::app()->getLastErrorMsg();
-				if(!empty($error_msg)) {
-					\Yaf\ExceptionHandler::instance()->appendDebugMsg('Application error_msg:'. $ob_content);
-				}
+				// $ob_content = ob_get_contents();
+				// ob_end_clean();
+				// ob_start();
+				// if(!empty($ob_content)) {
+				// 	\Yaf\ExceptionHandler::instance()->appendDebugMsg('start ob:'. $ob_content);
+				// }
 				$action_params = $action_method->getParameters();
 				$action_args = [];
 				if(!empty($action_params)) foreach($action_params as $action_param_key =>  $action_param) {
@@ -498,9 +514,8 @@ final class Dispatcher {
 			}catch(\Throwable $t) {
 				throw new Exception\LoadFailed\Action($t->getMessage(). __FILE__.':'.__LINE__ ."\n".$t->getTraceAsString() );
 			}
-			// var_export($action_result);
-			// var_export($this->_auto_render);
-			if($this->_auto_render  && $action_result !== false) {
+			//自动渲染
+			if($action_result ===true || $this->_auto_render  && $action_result ===null) {
 				try {
 					$get_view_method = $reflection->getMethod('getView');	
 					$view_object = $get_view_method->invoke($controller_class_object);
@@ -524,8 +539,25 @@ final class Dispatcher {
 				}
 				
 				\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto_render:'. $tpl_path);
-			}else {
-				//TODO: 在action return false，这里会直_instantly_flush = true，不走response, 会影响到某些场景未考虑到的场景
+			}else if(is_string($action_result)){			//string output 	
+				if($this->_instantly_flush !==true) {
+					$response->setBody($action_result);
+				}else {
+					echo $action_result;
+				}
+			}else if(is_array($action_result)){				//array defalut json output
+				if($this->_instantly_flush !==true) {
+					$response->setBody($action_result);
+				}else {
+					echo $action_result;
+				}
+			}else if($action_result instanceof Response_Abstract){				//array defalut json output
+				if($this->_instantly_flush !==true) {
+					$response = $action_result;
+				}else {
+					$action_result->response();
+				}
+			}else {																//default: _instantly_flush				
 				$this->_instantly_flush = true;
 				\Yaf\ExceptionHandler::instance()->appendDebugMsg('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
 				ob_end_flush();
@@ -537,16 +569,12 @@ final class Dispatcher {
 			$plugin->postDispatch($request, $response);
 		}
 
-		if($this->_return_response === true  && $this->_instantly_flush !==true) {
-			return $response;
-		}
-
 		return $action_result;
 	}
 
 	/**
-	 * <p>Switch on/off exception throwing while unexpected error occurring. When this is on, Yaf will throwing exceptions instead of triggering catchable errors.</p><br/>
-	 * <p>You can also use application.dispatcher.throwException to achieve the same purpose.</p>
+	 *  Switch on/off exception throwing while unexpected error occurring. When this is on, Yaf will throwing exceptions instead of triggering catchable errors.<br/>
+	 *  You can also use application.dispatcher.throwException to achieve the same purpose.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.throwexception.php
 	 *
@@ -559,8 +587,8 @@ final class Dispatcher {
 	}
 
 	/**
-	 * <p>While the application.dispatcher.throwException is On(you can also calling to <b>\Yaf\Dispatcher::throwException(TRUE)</b> to enable it), Yaf will throw \Exception whe error occurs instead of trigger error.</p><br/>
-	 * <p>then if you enable <b>\Yaf\Dispatcher::catchException()</b>(also can enabled by set application.dispatcher.catchException), all uncaught \Exceptions will be caught by ErrorController::error if you have defined one.</p>
+	 *  While the application.dispatcher.throwException is On(you can also calling to  \Yaf\Dispatcher::throwException(TRUE)  to enable it), Yaf will throw \Exception whe error occurs instead of trigger error.<br/>
+	 *  then if you enable  \Yaf\Dispatcher::catchException() (also can enabled by set application.dispatcher.catchException), all uncaught \Exceptions will be caught by ErrorController::error if you have defined one.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.catchexception.php
 	 *

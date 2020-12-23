@@ -1,14 +1,35 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf\View ;
 
 use Yaf\Application;
 use Yaf\Exception\LoadFailed\View;
 
 /**
- * <b>\Yaf\View\Simple</b> is the built-in template engine in Yaf, it is a simple but fast template engine, and only support PHP script template.
+ *  \Yaf\View\Simple  is the built-in template engine in Yaf, it is a simple but fast template engine, and only support PHP script template.
  * @link http://www.php.net/manual/en/class.yaf-view-simple.php
  *
- * @method void|bool eval(string $tpl_str, array $vars = null) <p>Render a string template and return the result.</p>
+ * @method void|bool eval(string $tpl_str, array $vars = null)  Render a string template and return the result.
  *
  * @link http://www.php.net/manual/en/yaf-view-simple.eval.php
  *
@@ -36,7 +57,7 @@ class Simple implements \Yaf\View_Interface {
 	 * @link http://www.php.net/manual/en/yaf-view-simple.construct.php
 	 *
 	 * @param string $template_dir The base directory of the templates, by default, it is APPLICATION . "/views" for Yaf.
-	 * @param array $options <p>Options for the engine, as of Yaf 2.1.13, you can use short tag
+	 * @param array $options  Options for the engine, as of Yaf 2.1.13, you can use short tag
 	 * "<?=$var?>" in your template(regardless of "short_open_tag"),
 	 * so comes a option named "short_tag",  you can switch this off
 	 * to prevent use short_tag in template.
@@ -99,7 +120,7 @@ class Simple implements \Yaf\View_Interface {
 	}
 
 	/**
-	 * <p>Render a template and display the result instantly.</p>
+	 *  Render a template and display the result instantly.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-view-simple.display.php
 	 *
@@ -131,7 +152,7 @@ class Simple implements \Yaf\View_Interface {
 	}
 
 	/**
-	 * <p>unlike \Yaf\View\Simple::assign(), this method assign a ref value to engine.</p>
+	 *  unlike \Yaf\View\Simple::assign(), this method assign a ref value to engine.
 	 * @link http://www.php.net/manual/en/yaf-view-simple.assignref.php
 	 *
 	 * @param string $name A string name which will be used to access the value in the template.
@@ -183,15 +204,15 @@ class Simple implements \Yaf\View_Interface {
 	}
 
 	/**
-	 * <p>Retrieve assigned variable</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>$name parameter can be empty since 2.1.11</p>
+	 *  Retrieve assigned variable
+	 
+	 *  Note: 
+	 *  $name parameter can be empty since 2.1.11
 	 * @link http://www.php.net/manual/en/yaf-view-simple.get.php
 	 *
-	 * @param null $name <p>the assigned variable name</p>
-	 * <br/>
-	 * <p>if this is empty, all assigned variables will be returned</p>
+	 * @param null $name  the assigned variable name
+	 
+	 *  if this is empty, all assigned variables will be returned
 	 *
 	 * @return mixed
 	 */
@@ -206,7 +227,7 @@ class Simple implements \Yaf\View_Interface {
 	}
 
 	/**
-	 * <p>This is a alternative and easier way to \Yaf\View\Simple::assign().</p>
+	 *  This is a alternative and easier way to \Yaf\View\Simple::assign().
 	 *
 	 * @link http://www.php.net/manual/en/yaf-view-simple.set.php
 	 *

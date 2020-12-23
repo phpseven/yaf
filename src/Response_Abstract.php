@@ -1,4 +1,25 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
 /**
@@ -56,10 +77,10 @@ abstract class Response_Abstract {
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.setbody.php
 	 *
 	 * @param string $content content string
-	 * @param string $key <p>the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this parameter is introduced as of 2.2.0</p>
+	 * @param string $key  the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used
+	 
+	 *  Note: 
+	 *  this parameter is introduced as of 2.2.0
 	 *
 	 * @return bool
 	 */
@@ -74,10 +95,10 @@ abstract class Response_Abstract {
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.appendbody.php
 	 *
 	 * @param string $content content string
-	 * @param string $key <p>the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this parameter is introduced as of 2.2.0</p>
+	 * @param string $key  the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used
+	 
+	 *  Note: 
+	 *  this parameter is introduced as of 2.2.0
 	 *
 	 * @return bool
 	 */
@@ -95,10 +116,10 @@ abstract class Response_Abstract {
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.prependbody.php
 	 *
 	 * @param string $content content string
-	 * @param string $key <p>the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this parameter is introduced as of 2.2.0</p>
+	 * @param string $key  the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used
+	 
+	 *  Note: 
+	 *  this parameter is introduced as of 2.2.0
 	 *
 	 * @return bool
 	 */
@@ -115,10 +136,10 @@ abstract class Response_Abstract {
 	 *
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.clearbody.php
 	 *
-	 * @param string $key <p>the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this parameter is introduced as of 2.2.0</p>
+	 * @param string $key  the content key, you can set a content with a key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used
+	 
+	 *  Note: 
+	 *  this parameter is introduced as of 2.2.0
 	 *
 	 * @return bool
 	 */
@@ -132,10 +153,10 @@ abstract class Response_Abstract {
 	 *
 	 * @link http://www.php.net/manual/en/yaf-response-abstract.getbody.php
 	 *
-	 * @param null|string $key <p>the content key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used. if you pass in a NULL, then all contents will be returned as a array</p>
-	 * <br/>
-	 * <b>Note:</b>
-	 * <p>this parameter is introduced as of 2.2.0</p>
+	 * @param null|string $key  the content key, if you don't specific, then \Yaf\Response_Abstract::DEFAULT_BODY will be used. if you pass in a NULL, then all contents will be returned as a array
+	 
+	 *  Note: 
+	 *  this parameter is introduced as of 2.2.0
 	 *
 	 * @return mixed
 	 */

@@ -1,7 +1,28 @@
 <?php
+/**
+  *----------------------------------------------------------------------------------------------------------
+  * @attention Apache2.0 LICENSE
+  * Copyright [YAFPlus] [phpseven]
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
+  * compliance with the License.You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is 
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+  * See the License for the specific language governing permissions and limitations under the License.
+  *----------------------------------------------------------------------------------------------------------
+  *  This product includes PHP software, freely available from
+  *  <http://www.php.net/software/>
+  *  This product Development Get ideas from Yet Another Framework, freely available from
+  *  <https://github.com/laruence/yaf>
+  *----------------------------------------------------------------------------------------------------------
+  *  Author: phpseven  <phpseven@php.net>    
+  *----------------------------------------------------------------------------------------------------------
+  */
 namespace Yaf ;
 
-use Yaf\Request\Http;
+use Yaf\Request\Http as RequestHttp;
 use Yaf\Response\Http as ResponseHttp;
 
 /**
@@ -83,7 +104,7 @@ class ExceptionHandler {
 	 * 如果为TRUE, 则在有未捕获异常的时候, Yaf会交给Error Controller的Error Action处理.
 	 * @var true
 	 */
-    protected $_catch_exception = false;
+    protected $_catch_exception = true;
 
     protected $_exception_object;
     
@@ -128,7 +149,7 @@ class ExceptionHandler {
         }
         if($this->_catch_exception) {
             $dispacher = Dispatcher::getInstance();
-            $requst = new Http('', '');
+            $requst = new RequestHttp('', '');
             $requst->setControllerName('Error');
             $requst->setActionName('error');
             $requst->setParam('exception', $e);
@@ -155,8 +176,8 @@ class ExceptionHandler {
 
     
 	/**
-	 * <p>Switch on/off exception throwing while unexpected error occurring. When this is on, Yaf will throwing exceptions instead of triggering catchable errors.</p><br/>
-	 * <p>You can also use application.dispatcher.throwException to achieve the same purpose.</p>
+	 *  Switch on/off exception throwing while unexpected error occurring. When this is on, Yaf will throwing exceptions instead of triggering catchable errors.<br/>
+	 *  You can also use application.dispatcher.throwException to achieve the same purpose.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.throwexception.php
 	 *
@@ -168,8 +189,8 @@ class ExceptionHandler {
 	}
 
 	/**
-	 * <p>While the application.dispatcher.throwException is On(you can also calling to <b>\Yaf\Dispatcher::throwException(TRUE)</b> to enable it), Yaf will throw \Exception whe error occurs instead of trigger error.</p><br/>
-	 * <p>then if you enable <b>\Yaf\Dispatcher::catchException()</b>(also can enabled by set application.dispatcher.catchException), all uncaught \Exceptions will be caught by ErrorController::error if you have defined one.</p>
+	 *  While the application.dispatcher.throwException is On(you can also calling to  \Yaf\Dispatcher::throwException(TRUE)  to enable it), Yaf will throw \Exception whe error occurs instead of trigger error.<br/>
+	 *  then if you enable  \Yaf\Dispatcher::catchException() (also can enabled by set application.dispatcher.catchException), all uncaught \Exceptions will be caught by ErrorController::error if you have defined one.
 	 *
 	 * @link http://www.php.net/manual/en/yaf-dispatcher.catchexception.php
 	 *
