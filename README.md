@@ -5,7 +5,56 @@ Yaf write by origin php
 使用原生php重写的一个Yaf版本，
 完整根据laruence大神的yaf思路，加上自己认识做出来的一个轻量级框架，
 可用于将现有代码迁移更容易维护的原生PHP，兼容php8.0！
-目前已完成Application/Resquest/Route_Static/Dispatch 等模块，已实现的功能都正常运行。
+
+目前进度：
+├── Application.php           已实现，其中的错误处理部分抽离出到 ExceptionHandler，此外throw_exception目前为固定触发，即所有错误必定会转换为exception
+├── Action_Abstract.php       未实现（没找到使用场景）
+├── Bootstrap_Abstract.php    已实现
+├── Config                    
+│   ├── Ini.php               已实现
+│   └── Simple.php            未实现
+├── Config_Abstract.php       已实现
+├── Controller_Abstract.php   已实现
+├── Dispatcher.php            已实现（现在控制的init方法可以返回false，让后面的action不再执行，并且不影响hook使用了）
+├── Exception                 已实现
+│   ├── DispatchFailed.php    已实现
+│   ├── LoadFailed            已实现
+│   │   ├── Action.php        已实现
+│   │   ├── Controller.php    已实现
+│   │   ├── Model.php         已实现
+│   │   ├── Plugin.php        已实现
+│   │   └── View.php          已实现
+│   ├── LoadFailed.php        已实现
+│   ├── RouterFailed.php      目前只有Route_Static，暂无此类异常抛出
+│   ├── StartupError.php      已实现
+│   └── TypeError.php         已实现
+├── ExceptionHandler.php      【新增类】
+├── Exception.php             已实现
+├── Loader.php                已实现yaf的自身的自动加载以及model/controller/plugin的自动加载，并自动加载时module内的models/controller，以及module外的文件夹都会寻找
+├── Plugin_Abstract.php       已实现
+├── Registry.php              未实现（需要借助yac/redis时）
+├── Request   
+│   ├── Http.php              已实现
+│   └── Simple.php            未具体测试
+├── Request_Abstract.php      已实现
+├── Response
+│   ├── Cli.php               已实现
+│   └── Http.php              未具体测试
+├── Response_Abstract.php     已实现
+├── Route                     route均在后续中实现
+│   ├── Map.php
+│   ├── Regex.php
+│   ├── Rewrite.php
+│   ├── Simple.php
+│   └── Supervar.php
+├── Route_Interface.php       已实现
+├── Router.php                已实现
+├── Route_Static.php          已实现
+├── Session.php               已实现
+├── View  
+│   └── Simple.php            已实现
+├── View_Interface.php        已实现
+└── yaf.inc.php               脱离compose的框架加载方法
 
 通过这些天摸索，我只想说
 
@@ -17,13 +66,19 @@ Yaf write by origin php
 
 
 - 1. composer require phpseven/yaf
-- 2. 添加 composer auto 到入库文件 index.php （下个版本会做无composer 的autoload）
+- 2.1 添加 composer auto 到入库文件 index.php 
 ```
 define('APPLICATION_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR); 
 require_once('path/to/vendor/autoload.php');
 
 ```
 
+- 2.2 或者下载最新稳定版本，并引入yaf.inc.php
+```
+define('APPLICATION_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR); 
+require_once('path/to/vendor/yaf.inc.php');
+
+```
 以下是Yaf 原介绍
 
 ## Yaf - Yet Another Framework
