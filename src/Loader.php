@@ -112,7 +112,15 @@ class Loader {
 			$file_find[] =$lib_dir .DIRECTORY_SEPARATOR. $class_file_name;
 			$type = self::YAF_CLASS_NAME_NORMAL;
 		} else {				
-			
+			if(empty($this->_library)) {	
+				$this->_library = APPLICATION_ROOT . 'application' . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR;
+				if(!file_exists($this->_library) || !is_readable($this->_library)) {
+					echo "系统异常：无法在加载 library 之前自动加载库函数";
+					echo ExceptionHandler::instance()->getDebugMsg();
+					print_r(debug_backtrace());
+					exit;
+				}
+			}
 			$app = Application::app();
 			$directory_path =	$app->getAppDirectory();
 			$default_module = strtolower($app->getDispatcher()->getDefaultModule());
@@ -155,24 +163,24 @@ class Loader {
 		}
 		foreach($file_find as $load_file) {			
 			if (!file_exists($load_file)  || !is_readable($load_file)) {   //文件不存在
-				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file is not exists: '.$load_file);
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file is not exists: '.$load_file."\n ");
 			}else {
-				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file exists: '.$load_file);
+				\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: file exists: '.$load_file."\n ");
 				require_once($load_file);
 				break;
 			}
 		}
 		
-		if (!class_exists($class_name)) {    //类不存在
+		if (!class_exists($class_name)) {    //App的类不存在
 			\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: class is not exists: '.$class_name .'====' .$load_file);
 			if($type === self::YAF_CLASS_NAME_MODEL) {
-				throw new Exception\LoadFailed\Model("Model $class_name is not exists");
+				throw new Exception\LoadFailed\Model("Model $class_name is not exists"."\n TRACE:".print_r(debug_backtrace(), true));
 			}
 			if($type === self::YAF_CLASS_NAME_CONTROLLER) {
-				throw new Exception\LoadFailed\Controller("Controller $class_name is not exists");
+				throw new Exception\LoadFailed\Controller("Controller $class_name is not exists [$load_file]"."\n TRACE:".print_r(debug_backtrace(), true));
 			}
 			if($type === self::YAF_CLASS_NAME_PLUGIN) {
-				throw new Exception\LoadFailed\Plugin("Plugin $class_name is not exists");
+				throw new Exception\LoadFailed\Plugin("Plugin $class_name is not exists"."\n TRACE:".print_r(debug_backtrace(), true));
 			}
             return false;
 		}
@@ -212,8 +220,8 @@ class Loader {
 		$instance->_library = $local_library_path;
 		$instance->_global_library = $global_library_path;
 		$app = Application::app();
-		$application_config = $app->getConfig()->get('application');	
-		$instance->ext = '.'.$application_config['ext'];
+		$application_config_ext = $app->getConfig('application.ext');	
+		$instance->ext = '.'.$application_config_ext;
 	}
 
 

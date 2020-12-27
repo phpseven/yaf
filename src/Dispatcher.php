@@ -57,7 +57,7 @@ final class Dispatcher {
 	/**
 	 * @var \Yaf\Plugin_Abstract
 	 */
-	protected $_plugins;
+	protected $_plugins = [];
 	/**
 	 * @var bool
 	 */
@@ -456,14 +456,14 @@ final class Dispatcher {
 
 		if(empty($controller)){
 			$msg = "Controller Name [$controller] is empty string";
-			throw new Controller($msg);
+			throw new Controller($msg."\n TRACE:".print_r(debug_backtrace(), true));
 		}
 		// $controller = str_ireplace('index.php', 'index', $controller);
 		//支持 Base_TestController 或者 Base\TestController
 		$controller_class_name = ucfirst("{$controller}Controller");
 		if(!preg_match("/^[a-z][a-z0-9_]+$/i",$controller_class_name )) {
 			$msg = " $controller_class_name is not a vaild controller";
-			throw new Controller($msg);
+			throw new Controller($msg."\n TRACE:".print_r(debug_backtrace(), true));
 		}
 		try {
 			$reflection = new ReflectionClass($controller_class_name);
@@ -474,9 +474,11 @@ final class Dispatcher {
 				$init_methd_result = $init_method->invoke($controller_class_object);
 			}
 		}catch(\ReflectionException $reflection_exception) {
-			throw new Exception\LoadFailed\Controller($reflection_exception->getMessage() );
+			throw new Exception\LoadFailed\Controller($reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
+			return false;	
 		}catch(\Throwable $t) {
-			throw new Exception\LoadFailed\Controller($t->getMessage() ); // . __FILE__.':'.__LINE__."\n".$t->getTraceAsString()
+			throw new Exception\LoadFailed\Controller($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) ); // .var_export($t->getPrevious(), true)
+			return false;
 		}
 		/**
 		 * https://github.com/laruence/yaf/issues/121
@@ -487,7 +489,7 @@ final class Dispatcher {
 		}else  {
 			if(!preg_match("/^[_a-z][a-z0-9_]+$/i",$action )) {
 				$msg = "$controller_class_name $action is not a vaild controller action";
-				throw new Action($msg);
+				throw new Action($msg."\n TRACE:".print_r(debug_backtrace(), true));
 			}
 			try{				
 				$action_method = $reflection->getMethod($action . 'Action');	
@@ -501,18 +503,22 @@ final class Dispatcher {
 				$action_args = [];
 				if(!empty($action_params)) foreach($action_params as $action_param_key =>  $action_param) {
 					$action_param_name = $action_param->getName();
-					$action_args[$action_param_key] = isset($params[$action_param_name])?$params[$action_param_name]:null;
+					$default_value = null;
+					if($action_param->isDefaultValueAvailable()) {
+						$default_value = $action_param->getDefaultValue();
+					}
+					$action_args[$action_param_key] = isset($params[$action_param_name])?$params[$action_param_name]:$default_value;
 				}
 				/**
 				 * Action 通过return 返回的数据
 				 */
 				$action_result = $action_method->invokeArgs($controller_class_object, $action_args);
 			}catch(View $view_exception) {
-				throw new View($view_exception->getMessage() );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+				throw new View($view_exception->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true) );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
 			}catch(\ReflectionException $reflection_exception) {
-				throw new Exception\LoadFailed\Action($reflection_exception->getMessage() );
+				throw new Exception\LoadFailed\Action($reflection_exception->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true) );
 			}catch(\Throwable $t) {
-				throw new Exception\LoadFailed\Action($t->getMessage(). __FILE__.':'.__LINE__ ."\n".$t->getTraceAsString() );
+				throw new Exception\LoadFailed\Action($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
 			}
 			//自动渲染
 			if($action_result ===true || $this->_auto_render  && $action_result ===null) {
@@ -531,11 +537,11 @@ final class Dispatcher {
 					}
 					
 				}catch(View $view_exception) {
-					throw new View('View Error:'.$view_exception->getMessage() );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+					throw new View('View Error:'.$view_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
 				}catch(\ReflectionException $reflection_exception) {
-					throw new Exception\LoadFailed\Action('ReflectionException:'.$reflection_exception->getMessage() );
+					throw new Exception\LoadFailed\Action('ReflectionException:'.$reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
 				}catch(\Throwable $t) {
-					throw new Exception\LoadFailed\Action($t->getMessage(). __FILE__.':'.__LINE__ ."\n".$t->getTraceAsString() );
+					throw new Exception\LoadFailed\Action($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
 				}
 				
 				\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto_render:'. $tpl_path);

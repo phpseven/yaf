@@ -63,7 +63,9 @@ class Router {
 	 *
 	 * @return bool|\Yaf\Router return FALSE on failure
 	 */
-	public function addRoute($name, \Yaf\Route_Interface $route){ }
+	public function addRoute($name, \Yaf\Route_Interface $route){
+		$this->_routes[$name]	= $route;
+	 }
 
 	/**
 	 *  Add routes defined by configs into \Yaf\Router's route stack
@@ -85,15 +87,19 @@ class Router {
 	 * @return bool|\Yaf\Router return FALSE on failure
 	 */
 	public function route(\Yaf\Request_Abstract &$request){ 
+		if(!empty($this->_routes)) {
+			foreach($this->_routes as $_route){
+				if($_route->route($request) === true) {
+					$this->current = $_route;
+					return $this;
+				}
+			}
+		}
+
 		$route_static = new Route_Static();
-		return $route_static->route($request);
-		
-		if(empty($this->_routes)){
-			$this->_routes[] = new Route_Static();
-		}
-		foreach($this->_routes as $_route){
-			$_route->route($request);
-		}
+		$route_static->route($request);
+		$this->current = $route_static;
+		return $this;
 	}
 
 	/**
@@ -127,5 +133,10 @@ class Router {
 	 *
 	 * @return string the name of the effective route.
 	 */
-	public function getCurrentRoute(){ }
+	public function assemble(array $info, array $query = null){ 
+		if(empty($this->current)) {
+			return null;
+		}
+		return $this->current->assemble($info, $query);
+	}
 }

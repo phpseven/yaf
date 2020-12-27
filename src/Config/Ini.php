@@ -22,7 +22,6 @@
   */
 namespace Yaf\Config ;
 
-use stdClass;
 use TypeError;
 
 /**
@@ -33,68 +32,6 @@ use TypeError;
  */
 class Ini extends \Yaf\Config_Abstract implements \Iterator, \Traversable, \ArrayAccess, \Countable {
 
-	protected $_data = [];
-	protected $_object = null;
-	/**
-	 * @see \Yaf\Config_Abstract::get
-	 */
-	public function __get($name = null){ 
-		return $this->get($name);
-	}
-
-	/**
-	 * @see \Yaf\Config_Abstract::set
-	 */
-	public function __set($name, $value){ 
-		throw new \Yaf\Exception\TypeError('TODO');
-	}
-
-	/**
-	 * @see \Yaf\Config_Abstract::get
-	 */
-	public function get($name = null){ 
-		if($name ===null) {
-			return $this->_data;
-		}
-		if(is_string($name)){
-			$_key_arr = explode('.', $name);
-			$_key_count = count($_key_arr);
-			if(empty($_key_arr[0])) {
-				throw new \Yaf\Exception\TypeError('ini key is empty, please check');
-			}
-			if(!isset($this->_data[$_key_arr[0]])){
-				return null;
-			}
-			$v = $this->_data[$_key_arr[0]];
-			for($i = 1; $i<$_key_count; $i++) {
-				if(!isset($v[$_key_arr[$i]])){
-					return null;
-				}
-				$v = $v[$_key_arr[$i]];
-			}
-			return $v;
-		}
-	}
-
-
-	/**
-	 * @see \Yaf\Config_Abstract::set
-	 * @deprecated ini is readonly
-	 */
-	public function set($name, $value){ }
-
-	/**
-	 * @see \Yaf\Config_Abstract::toArray
-	 */
-	public function toArray(){ 
-		return $this->_data;
-	}
-
-	/**
-	 * @see \Yaf\Config_Abstract::readonly
-	 */
-	public function readonly(){ }
-
 	/**
 	 * @link http://www.php.net/manual/en/yaf-config-ini.construct.php
 	 *
@@ -103,79 +40,46 @@ class Ini extends \Yaf\Config_Abstract implements \Iterator, \Traversable, \Arra
 	 *
 	 * @throws \Yaf\Exception\TypeError
 	 */
-	public function __construct(string $config_file, string $section = null){ 
+	public function __construct($config_file = '', string $section = ''){
+		if(!is_string($config_file)){
+			throw new TypeError("config file  typeError" . var_export($config_file, true) );
+		}
+		$section = trim($section);
 		if(!file_exists($config_file)){
 			throw new TypeError("config file '$config_file' is not exists");
 		}
 		if(!is_readable($config_file)){
 			throw new TypeError("config file '$config_file' can not READ");
 		}
-		$data = parse_ini_file($config_file, $section);  /* ,INI_SCANNER_NORMAL */
-		if(!empty($data)) foreach($data as $key=>$value){
-			$_key_arr = explode('.', $key);
-			$_key_count = count($_key_arr);
-			$v = [$_key_arr[$_key_count-1] => $value];
-			for($i = $_key_count-2; $i>=0; $i--) {
-				$v = [$_key_arr[$i] => $v];
+		$data_with_section = parse_ini_file($config_file, true);  /* ,INI_SCANNER_NORMAL */
+
+		if(empty($data_with_section))  {
+			throw new TypeError("config file data '$config_file' is EMPTY ");
+		}
+		
+		
+		foreach($data_with_section as $section_string=>$data){
+			if(!is_string($section_string)  || empty($section_string)){
+				continue;
 			}
-			$this->_data = array_replace_recursive($this->_data, $v);
+			$section_arr = explode(':', $section_string);
+			if(empty($section_arr[0]) ){
+				continue;
+			}
+			$section_arr[0] = trim($section_arr[0]);
+			if(!in_array($section_arr[0], ['common', $section ]) ) {
+				continue;
+			}
+			foreach($data as $key=>$value){
+				$_key_arr = explode('.', $key);
+				$_key_count = count($_key_arr);
+				$v = [$_key_arr[$_key_count-1] => $value];
+				for($i = $_key_count-2; $i>=0; $i--) {
+					$v = [$_key_arr[$i] => $v];
+				}
+				$this->_data = array_replace_recursive($this->_data, $v);
+			}
 		}
 	}
-
-	/**
-	 * @link http://www.php.net/manual/en/yaf-config-ini.isset.php
-	 * @param string $name
-	 */
-	public function __isset($name){ }
-
-	/**
-	 * @see \Countable::count
-	 */
-	public function count(){ }
-
-	/**
-	 * @see \Iterator::rewind
-	 */
-	public function rewind(){ }
-
-	/**
-	 * @see \Iterator::current
-	 */
-	public function current(){ }
-
-	/**
-	 * @see \Iterator::next
-	 */
-	public function next(){ }
-
-	/**
-	 * @see \Iterator::valid
-	 */
-	public function valid(){ }
-
-	/**
-	 * @see \Iterator::key
-	 */
-	public function key(){ }
-
-	/**
-	 * @see \ArrayAccess::offsetUnset
-	 * @deprecated not_implemented
-	 */
-	public function offsetUnset($name){ }
-
-	/**
-	 * @see \ArrayAccess::offsetGet
-	 */
-	public function offsetGet($name){ }
-
-	/**
-	 * @see \ArrayAccess::offsetExists
-	 */
-	public function offsetExists($name){ }
-
-	/**
-	 * @see \ArrayAccess::offsetSet
-	 */
-	public function offsetSet($name, $value){ }
+	
 }

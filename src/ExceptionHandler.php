@@ -102,7 +102,7 @@ class ExceptionHandler {
 	 * 在ap.dispatcher.throwException开启的状态下, 是否启用默认捕获异常机制
 	 * 当然,也可以在配置文件中使用ap.dispatcher.catchException=$switch达到同样的效果, 默认的是开启状态.
 	 * 如果为TRUE, 则在有未捕获异常的时候, Yaf会交给Error Controller的Error Action处理.
-	 * @var true
+	 * @var bool
 	 */
     protected $_catch_exception = true;
 
@@ -114,19 +114,22 @@ class ExceptionHandler {
      * @param string $error_message  
      * @return void 
      */
-	public function triggerError( string $error_message, int $type){
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-        $this->code = $type;
-        $this->message = $error_message;
-        $this->line = $trace[0]['line'];
-        $this->file = $trace[0]['file'];
+	// public function triggerError( string $error_message, int $type){
+    //     $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+    //     $this->code = $type;
+    //     $this->message = $error_message;
+    //     $this->line = $trace[0]['line'];
+    //     $this->file = $trace[0]['file'];
         
         
-        return Application::app()->callFunction($this->__error_handler, [$this->code, $this->message, $this->file, $this->line ]);
-    }
-    
+    //     return Application::app()->callFunction($this->__error_handler, [$this->code, $this->message, $this->file, $this->line ]);
+    // }
+    /**
+     * 
+     * @return ExceptionHandler
+     */
     public static function instance() {
-        if(!isset(self::$__handler_instance)) {
+        if(empty(self::$__handler_instance)) {
             $instance = new self();
             $instance->__initConst();
             $instance->__error_handler = array($instance, 'errorHanlerDefault');
@@ -167,7 +170,9 @@ class ExceptionHandler {
         }
         if($this->_throw_exception) {
             $error_class = $this->getExceptionName($errno);
-            $exception_object = new $error_class();
+            $trace = self::traceToString(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1));
+            $error_msg = $trace;
+            $exception_object = new $error_class($error_msg);
             return $this->__initExceptionHandler($exception_object);
         }
         return  $result;
@@ -203,31 +208,33 @@ class ExceptionHandler {
 
 
         
-    public function __initConst()
+    private function __initConst()
     {
         
-        define('YAF_ERR_BASE', E_ALL+1*2);
-        define('YAF_ERR_STARTUP_FAILED', YAF_ERR_BASE+0);
-        define('YAF\ERR\STARTUP\FAILED', YAF_ERR_STARTUP_FAILED);
-        define('YAF_ERR_ROUTE_FAILED', YAF_ERR_BASE+1);
-        define('YAF\ERR\ROUTE\FAILED', YAF_ERR_ROUTE_FAILED);
-        define('YAF_ERR_DISPATCH_FAILED', YAF_ERR_BASE+2);
-        define('YAF\ERR\DISPATCH\FAILED', YAF_ERR_DISPATCH_FAILED);
-        define("YAF_ERR_NOTFOUND_MODULE", YAF_ERR_BASE+3);
-        define("YAF\ERR\NOTFOUND\MODULE", YAF_ERR_NOTFOUND_MODULE);
-        define("YAF_ERR_NOTFOUND_CONTROLLER", YAF_ERR_BASE+4);
-        define("YAF\ERR\NOTFOUND\CONTROLLER", YAF_ERR_NOTFOUND_CONTROLLER);		
-        define("YAF_ERR_NOTFOUND_ACTION", YAF_ERR_BASE+5);
-        define("YAF\ERR\NOTFOUND\ACTION", YAF_ERR_NOTFOUND_ACTION);				
-        define("YAF_ERR_NOTFOUND_VIEW", YAF_ERR_BASE+6);
-        define("YAF\ERR\NOTFOUND\VIEW", YAF_ERR_NOTFOUND_VIEW);
-
-        define("YAF_ERR_CALL_FAILED", YAF_ERR_BASE+7);
-        define("YAF\ERR\CALL\FAILED", YAF_ERR_CALL_FAILED);
-        define("YAF_ERR_AUTOLOAD_FAILED", YAF_ERR_BASE+8);
-        define("YAF\ERR\AUTOLOAD\FAILED",YAF_ERR_AUTOLOAD_FAILED);
-        define("YAF_ERR_TYPE_ERROR", YAF_ERR_BASE+9);
-        define("YAF\ERR\TYPE\ERROR", YAF_ERR_TYPE_ERROR);   
+		if(!defined('YAF_ERR_BASE')) {
+            define('YAF_ERR_BASE', E_ALL+1*2);
+            define('YAF_ERR_STARTUP_FAILED', YAF_ERR_BASE+0);
+            define('YAF\ERR\STARTUP\FAILED', YAF_ERR_STARTUP_FAILED);
+            define('YAF_ERR_ROUTE_FAILED', YAF_ERR_BASE+1);
+            define('YAF\ERR\ROUTE\FAILED', YAF_ERR_ROUTE_FAILED);
+            define('YAF_ERR_DISPATCH_FAILED', YAF_ERR_BASE+2);
+            define('YAF\ERR\DISPATCH\FAILED', YAF_ERR_DISPATCH_FAILED);
+            define("YAF_ERR_NOTFOUND_MODULE", YAF_ERR_BASE+3);
+            define("YAF\ERR\NOTFOUND\MODULE", YAF_ERR_NOTFOUND_MODULE);
+            define("YAF_ERR_NOTFOUND_CONTROLLER", YAF_ERR_BASE+4);
+            define("YAF\ERR\NOTFOUND\CONTROLLER", YAF_ERR_NOTFOUND_CONTROLLER);		
+            define("YAF_ERR_NOTFOUND_ACTION", YAF_ERR_BASE+5);
+            define("YAF\ERR\NOTFOUND\ACTION", YAF_ERR_NOTFOUND_ACTION);				
+            define("YAF_ERR_NOTFOUND_VIEW", YAF_ERR_BASE+6);
+            define("YAF\ERR\NOTFOUND\VIEW", YAF_ERR_NOTFOUND_VIEW);
+    
+            define("YAF_ERR_CALL_FAILED", YAF_ERR_BASE+7);
+            define("YAF\ERR\CALL\FAILED", YAF_ERR_CALL_FAILED);
+            define("YAF_ERR_AUTOLOAD_FAILED", YAF_ERR_BASE+8);
+            define("YAF\ERR\AUTOLOAD\FAILED",YAF_ERR_AUTOLOAD_FAILED);
+            define("YAF_ERR_TYPE_ERROR", YAF_ERR_BASE+9);
+            define("YAF\ERR\TYPE\ERROR", YAF_ERR_TYPE_ERROR);   
+		}
     }
 
 
@@ -308,8 +315,13 @@ class ExceptionHandler {
         $error_map = $this->getErrorMap();
         $error_number_string = $error_map[$errno]??$errno;
         $error_string =  "($error_number_string)$errstr \n #$errfile:$errline \n";
+        $error_string .= 'TRACE1 :'.print_r(debug_backtrace(), true);
         //非致命错误，记录内容到debugMsg
         if(!isset($error_map[$errno])) {
+            // echo "<br/> \n";
+            // var_dump($errno);
+            // var_dump($errstr);
+            // var_dump($error_string);exit;
             $this->appendDebugMsg($error_string);
             return true;
         }
@@ -322,15 +334,11 @@ class ExceptionHandler {
         // header('HTTP/1.1 500 Internal Server Error');
         // $trace = $this->__toString();
         // echo '<pre>'.$error_string .$trace .'</pre>';
+        echo $this->getDebugMsg();
         return false;
         //继续使用PHP标准错误处理程序
     }
 
-    private function __exception_hanler($e){
-        
-        $error_message = $e->getMessage()."#". $e->getFile() . ':'.$e->getLine();
-        
-    }
 
     
     /**
@@ -360,7 +368,7 @@ class ExceptionHandler {
                 continue;
             }
             if (isset($t['file'])) {
-                $trace_string .= "{$t['file']}:{$t['line']} \r\n";
+                $trace_string .= "{$t['file']}:{$t['line']} <br />\r\n";
             }
             if (isset($t['class'])) {
                 $trace_string .= "\t{$t['class']}{$t['type']}";

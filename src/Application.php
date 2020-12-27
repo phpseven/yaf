@@ -25,8 +25,10 @@ namespace Yaf;
 use Bootstrap;
 use ReflectionMethod;
 use Yaf\Config\Ini;
+use Yaf\Config\Simple;
 use Yaf\Exception\LoadFailed;
 use Yaf\Exception\StartupError;
+use Yaf\Exception\TypeError;
 
 /**
  * \Yaf\Application provides a bootstrapping facility for applications which provides reusable resources, common- and module-based bootstrap classes and dependency checking.
@@ -99,21 +101,29 @@ final class Application {
 	 * @throws \Yaf\Exception\TypeError|\Yaf\Exception\StartupError
 	 */
 	public function __construct($config, $envrion = null){
-		ob_start();			
+		// ob_start();			
 		$this->_environ =  $envrion!==null ? $envrion : getenv('envType');
 		$this->__initConst();
 		$excetion_hanler = ExceptionHandler::instance();	
 		$this->__loader = Loader::getInstance();
 
 		self::$_app = $this;
-		$this->config = new Ini($config);
+		if(is_string($config)) {
+			$this->config = new Ini($config, $this->_environ);
+		}else if(is_array($config)) {
+			$this->config = new Simple($config, $this->_environ);
+		}else {
+			throw new  TypeError("config type error". var_export($config, true));
+		}
 	}
 
 	protected function __initConst() {		
-		define("YAF\ENVIRON", $this->_environ);
-		define("YAF_ENVIRON", \YAF\ENVIRON);
-		define("YAF\VERSION", $this->__version);
-		define("YAF_VERSION", \YAF\VERSION);
+		if(!defined('YAF_VERSION')) {
+			define("YAF\ENVIRON", $this->_environ);
+			define("YAF_ENVIRON", \YAF\ENVIRON);
+			define("YAF\VERSION", $this->__version);
+			define("YAF_VERSION", \YAF\VERSION);
+		}
 	}
 
 
@@ -262,9 +272,9 @@ final class Application {
 				$method->invoke($bootstrap, $this->dispatcher);
 			}		
 		}catch(\ReflectionException $reflection_exception) {
-			throw new Exception\LoadFailed\Action("bootstrap init failed:" .$reflection_exception->getMessage() .__FILE__ . ':'.__LINE__  );
+			throw new Exception\LoadFailed\Action("bootstrap init failed:" .$reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
 		}catch(\Throwable $t) {
-			throw new Exception\LoadFailed\Action("bootstrap init failed2:".$t->getMessage() .$t->getTraceAsString());
+			throw new Exception\LoadFailed\Action("bootstrap init failed2:".$t->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true));
 		}
 		return $this;
 	}
@@ -276,6 +286,10 @@ final class Application {
 	 * @return \Yaf\Config_Abstract
 	 */
 	public function getConfig($name = null){ 
+		if(empty($this->config)){
+			echo 'Config 类未初始化成功';
+			exit();
+		}
 		if(!empty($name)) {
 			return $this->config->get($name);
 		}

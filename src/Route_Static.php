@@ -36,14 +36,15 @@ namespace Yaf ;
 class Route_Static implements \Yaf\Route_Interface {
 
 	/**
-	 * @deprecated not_implemented
 	 * @link http://www.php.net/manual/en/yaf-route-static.match.php
 	 *
 	 * @param string $uri
 	 *
 	 * @return bool
 	 */
-	public function match($uri){ }
+	public function match($uri){ 
+		return true;
+	}
 
 	/**
 	 * @link http://www.php.net/manual/en/yaf-route-static.route.php
@@ -67,13 +68,13 @@ class Route_Static implements \Yaf\Route_Interface {
 		$action = $dispatcher->getDefaultAction();
 		$params = [];
 		if(!empty($uri)) {
-			$uri_explode = explode('/', $uri);		//TODO: FILLTER
+			$uri_explode = explode('/', $uri);
 			array_walk($uri_explode,function (&$var)
 			{
 				$var =  (trim($var));
 			});
 			$explode_count = count($uri_explode);
-			$action_prefer = $application->getConfig()->get('yaf.action_prefer');
+			$action_prefer = $application->getConfig('yaf.action_prefer');
 			$module_limit = $application->getModules();
 			array_walk($module_limit,function (&$var)
 			{
@@ -126,5 +127,40 @@ class Route_Static implements \Yaf\Route_Interface {
 	 * @param array $query
 	 * @return bool
 	 */
-	public function assemble(array $info, array $query = null){ }
+	public function assemble(array $info, array $query = null){		
+		$controller = Dispatcher::getInstance()->getDefaultController();
+		$module = Dispatcher::getInstance()->getDefaultModule();
+		$module_default = Dispatcher::getInstance()->getDefaultModule();
+		$action = Dispatcher::getInstance()->getDefaultAction();
+		$params = [];
+		foreach($info as $key=> $value) {
+			switch ($key) {
+				case ':m':
+					$module = $value; 
+				break;
+				case ':a':
+					$action = $value; 
+				break;
+				case ':c':
+					$controller = $value; 
+				break;
+				
+				default:
+					$params[] = urlencode($key)."=".urlencode($value);
+				break;
+			}
+		}
+
+		$uri = "/$controller/$action";
+		if($module !== $module_default) {
+			$uri = "/$module" . $uri;
+		}
+		if(!empty($params)) {
+			$uri .= implode('/', $params);
+		}
+		if(!empty($query)) {			
+			$uri .= http_build_query($query);
+		}
+		return $uri;
+	}
 }
