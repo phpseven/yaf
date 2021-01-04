@@ -272,12 +272,12 @@ final class Application {
 				$method->invoke($bootstrap, $this->dispatcher);
 			}		
 		}catch(\ReflectionException $reflection_exception) {
-			throw new Exception\LoadFailed\Action("bootstrap init failed:" .$reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
+			throw new Exception\LoadFailed\Action("reflection exception:".$reflection_exception->getMessage(), $reflection_exception->getCode(), $reflection_exception );
 		}catch(\Throwable $t) {
-			throw new Exception\LoadFailed\Action("bootstrap init failed2:".$t->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true));
+			throw $t;
 		}
 		return $this;
-	}
+	}	
 
 
 	/**

@@ -473,12 +473,11 @@ final class Dispatcher {
 			if($init_method) {
 				$init_methd_result = $init_method->invoke($controller_class_object);
 			}
+			
 		}catch(\ReflectionException $reflection_exception) {
-			throw new Exception\LoadFailed\Controller($reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
-			return false;	
+			throw new Exception\LoadFailed\Controller("reflection exception:".$reflection_exception->getMessage(), $reflection_exception->getCode(), $reflection_exception );
 		}catch(\Throwable $t) {
-			throw new Exception\LoadFailed\Controller($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) ); // .var_export($t->getPrevious(), true)
-			return false;
+			throw $t;
 		}
 		/**
 		 * https://github.com/laruence/yaf/issues/121
@@ -514,11 +513,11 @@ final class Dispatcher {
 				 */
 				$action_result = $action_method->invokeArgs($controller_class_object, $action_args);
 			}catch(View $view_exception) {
-				throw new View($view_exception->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true) );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+				throw new View($view_exception->getMessage() ."\n TRACE:".$view_exception->getTraceAsString(), $view_exception->getCode(), $view_exception );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
 			}catch(\ReflectionException $reflection_exception) {
-				throw new Exception\LoadFailed\Action($reflection_exception->getMessage() ."\n TRACE:".print_r(debug_backtrace(), true) );
+				throw new Exception\LoadFailed\Action("reflection exception:".$reflection_exception->getMessage(), $reflection_exception->getCode(), $reflection_exception );
 			}catch(\Throwable $t) {
-				throw new Exception\LoadFailed\Action($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
+				throw $t;
 			}
 			//自动渲染
 			if($action_result ===true || $this->_auto_render  && $action_result ===null) {
@@ -537,11 +536,11 @@ final class Dispatcher {
 					}
 					
 				}catch(View $view_exception) {
-					throw new View('View Error:'.$view_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
+					throw new View('View Error:'.$view_exception->getMessage()."\n TRACE:".$view_exception->getTraceAsString(), $view_exception->getCode(), $view_exception);  //. __FILE__.':'.__LINE__ ."\n".$view_exception->getTraceAsString()
 				}catch(\ReflectionException $reflection_exception) {
-					throw new Exception\LoadFailed\Action('ReflectionException:'.$reflection_exception->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
+					throw new Exception\LoadFailed\Action("reflection exception:".$reflection_exception->getMessage(), $reflection_exception->getCode(), $reflection_exception );
 				}catch(\Throwable $t) {
-					throw new Exception\LoadFailed\Action($t->getMessage()."\n TRACE:".print_r(debug_backtrace(), true) );
+					throw $t;
 				}
 				
 				\Yaf\ExceptionHandler::instance()->appendDebugMsg('auto_render:'. $tpl_path);
@@ -566,7 +565,9 @@ final class Dispatcher {
 			}else {																//default: _instantly_flush				
 				$this->_instantly_flush = true;
 				\Yaf\ExceptionHandler::instance()->appendDebugMsg('no auto_render:'. var_export($this->_auto_render, true). var_export($action_result, true));
-				ob_end_flush();
+				while (ob_get_level() > 0) {
+					ob_end_flush();
+				}
 			}
 
 		}

@@ -174,13 +174,13 @@ class Loader {
 		if (!class_exists($class_name)) {    //App的类不存在
 			\Yaf\ExceptionHandler::instance()->appendDebugMsg('yaf auto load: class is not exists: '.$class_name .'====' .$load_file);
 			if($type === self::YAF_CLASS_NAME_MODEL) {
-				throw new Exception\LoadFailed\Model("Model $class_name is not exists"."\n TRACE:".print_r(debug_backtrace(), true));
+				throw new Exception\LoadFailed\Model("Model $class_name is not exists");
 			}
 			if($type === self::YAF_CLASS_NAME_CONTROLLER) {
-				throw new Exception\LoadFailed\Controller("Controller $class_name is not exists [$load_file]"."\n TRACE:".print_r(debug_backtrace(), true));
+				throw new Exception\LoadFailed\Controller("Controller $class_name is not exists [$load_file]");
 			}
 			if($type === self::YAF_CLASS_NAME_PLUGIN) {
-				throw new Exception\LoadFailed\Plugin("Plugin $class_name is not exists"."\n TRACE:".print_r(debug_backtrace(), true));
+				throw new Exception\LoadFailed\Plugin("Plugin $class_name is not exists");
 			}
             return false;
 		}

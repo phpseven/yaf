@@ -108,7 +108,9 @@ class Simple implements \Yaf\View_Interface {
 		\Yaf\ExceptionHandler::instance()->appendDebugMsg($tpl_ob);
 		// var_dump($tpl_ob);
 		unset($tpl_ob);
-		ob_end_flush();
+		while (ob_get_level() > 0) {
+			ob_end_flush();
+		}
 
 		ob_start();
 		$this->display($tpl, $tpl_vars);

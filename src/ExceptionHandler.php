@@ -146,10 +146,6 @@ class ExceptionHandler {
         $errno = $e->getCode();
         $errline = $e->getLine();
         
-        $result = Application::app()->callFunction($this->__error_handler, [$errno, $errstr, $errfile, $errline]);      
-        if($result === true){
-            return $result;
-        }
         if($this->_catch_exception) {
             $dispacher = Dispatcher::getInstance();
             $requst = new RequestHttp('', '');
@@ -296,8 +292,11 @@ class ExceptionHandler {
 			E_CORE_ERROR => 'E_CORE_ERROR',
 			E_COMPILE_ERROR => 'E_COMPILE_ERROR',		
 			E_USER_ERROR => 'E_USER_ERROR',
-		];
-		return $error_map;
+        ];
+        if(isset($error_map[$errno])){
+            return $error_map[$errno];
+        }
+		return '\Exception';
 
 	}
     
@@ -315,26 +314,16 @@ class ExceptionHandler {
         $error_map = $this->getErrorMap();
         $error_number_string = $error_map[$errno]??$errno;
         $error_string =  "($error_number_string)$errstr \n #$errfile:$errline \n";
-        $error_string .= 'TRACE1 :'.print_r(debug_backtrace(), true);
+        $error_string .= 'TRACE errorHanlerDefault :'.print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true);
+        // var_dump($errstr);exit;
         //非致命错误，记录内容到debugMsg
         if(!isset($error_map[$errno])) {
-            // echo "<br/> \n";
-            // var_dump($errno);
-            // var_dump($errstr);
-            // var_dump($error_string);exit;
             $this->appendDebugMsg($error_string);
             return true;
         }
-        // $ob = ob_get_contents();
-        // if($ob !== false) {
-        //     $this->appendDebugMsg($ob);
-        //     ob_end_clean();
-        //     ob_start();
-        // }
-        // header('HTTP/1.1 500 Internal Server Error');
-        // $trace = $this->__toString();
-        // echo '<pre>'.$error_string .$trace .'</pre>';
+        
         echo $this->getDebugMsg();
+        echo '<pre>'.$error_string .'</pre>';
         return false;
         //继续使用PHP标准错误处理程序
     }
