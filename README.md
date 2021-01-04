@@ -65,7 +65,7 @@ Yaf write by origin php
 ## 安装方法
 
 
-- 1. composer require phpseven/yaf
+- 1   composer require phpseven/yaf
 - 2.1 添加 composer auto 到入库文件 index.php 
 ```
 define('APPLICATION_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR); 
